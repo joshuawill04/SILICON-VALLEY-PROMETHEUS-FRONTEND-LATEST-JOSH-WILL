@@ -1,3 +1,4 @@
+import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -56,7 +57,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please sign in before starting checkout.' }, { status: 401 })
     }
 
-    const origin = new URL(request.url).origin
+    // Use a more robust origin detection for proxies and local dev
+    const headersList = await headers()
+    const host = headersList.get('host') || new URL(request.url).host
+    const proto = headersList.get('x-forwarded-proto') || 'http'
+    const origin = `${proto}://${host}`
+
     const nextPath = normalizeNextPath(payload.nextPath, '/')
     const cancelUrl = new URL(BILLING_DASHBOARD_PATH, origin)
     const successUrl = new URL('/settings/billing/success', origin)
@@ -78,6 +84,9 @@ export async function POST(request: Request) {
       client_reference_id: user.id,
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
+      // Explicitly disable managed_payments for the 2026-04-22.dahlia version
+      // unless specifically configured in the Stripe Dashboard.
+      managed_payments: { enabled: false },
       metadata: {
         planId: payload.planId,
         userId: user.id,
@@ -98,6 +107,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: session.url })
   } catch (error) {
+    console.error('[stripe checkout error]', error)
     const message = error instanceof Error ? error.message : 'Failed to start Stripe checkout.'
     return NextResponse.json({ error: message }, { status: 400 })
   }
