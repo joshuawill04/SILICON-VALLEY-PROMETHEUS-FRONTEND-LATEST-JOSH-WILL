@@ -189,7 +189,18 @@ export function DashboardSidebar() {
                 exit={{ opacity: 0, y: 6, scale: 0.985 }}
                 transition={COLLAPSE_CONTENT_TRANSITION}
               >
-                <div className="text-[11px] font-semibold uppercase tracking-[0.36em] text-white/38">Prometheus</div>
+                <div className="flex items-center">
+                  <Image 
+                    src="/branding/prometheus-logo-no-bg.png" 
+                    alt="Prometheus" 
+                    width={20} 
+                    height={20} 
+                    className="size-5 object-contain"
+                  />
+                  <p className="text-[11px] font-bold uppercase tracking-[0.36em] text-white/92 ml-1" style={{ fontFamily: 'var(--font-mono), ui-sans-serif, system-ui, sans-serif' }}>
+                    rometheus
+                  </p>
+                </div>
                 <div className="mt-3 text-lg font-semibold text-white/92">Creative operating system</div>
                 <p className="mt-1.5 max-w-[18rem] text-sm leading-6 text-white/42">
                   Hover a row to preview the carved blade state before you move.
