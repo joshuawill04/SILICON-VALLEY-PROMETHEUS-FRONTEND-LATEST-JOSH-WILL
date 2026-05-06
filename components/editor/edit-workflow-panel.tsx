@@ -4,6 +4,7 @@ import * as React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CheckCircle2, Loader2, Sparkles, Wand2 } from 'lucide-react'
 
+import { TextReveal } from '@/components/editor/text-reveal'
 import { Plan, type PlanItem } from '@/components/ui/agent-plan'
 import { useStableReducedMotion } from '@/hooks/use-stable-reduced-motion'
 import { STYLE_TEMPLATES, type StyleTemplate } from '@/lib/styles/style-templates'
@@ -70,11 +71,14 @@ export function EditWorkflowPanel({ projectTitle, sourceLabel, job }: EditWorkfl
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.32em] text-white/35">Edit</div>
-          <div className="mt-2 text-sm leading-6 text-white/72">
-            This lane starts as soon as a prompt says to edit the imported video.
-          </div>
-          <div className="mt-2 text-[11px] uppercase tracking-[0.22em] text-white/42">{projectTitle}</div>
+          <TextReveal as="div" text="Edit" delay={0.04} className="text-[10px] uppercase tracking-[0.32em] text-white/35" />
+          <TextReveal
+            as="div"
+            text="This lane starts as soon as a prompt says to edit the imported video."
+            delay={0.08}
+            className="mt-2 text-sm leading-6 text-white/72"
+          />
+          <TextReveal as="div" text={projectTitle} delay={0.12} className="mt-2 text-[11px] uppercase tracking-[0.22em] text-white/42" />
         </div>
         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] text-white/66">
           {job?.status === 'running' ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
@@ -82,7 +86,7 @@ export function EditWorkflowPanel({ projectTitle, sourceLabel, job }: EditWorkfl
         </div>
       </div>
 
-      <div className="mt-4 space-y-3 overflow-y-auto pr-1">
+      <div className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1">
         {job ? (
           <>
             <div className="rounded-[16px] border border-white/8 bg-black/18 p-3">

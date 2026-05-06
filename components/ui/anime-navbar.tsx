@@ -4,6 +4,7 @@ import * as React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 
+import { TextReveal } from '@/components/editor/text-reveal'
 import { cn } from '@/lib/utils'
 
 export type AnimeNavItem = {
@@ -27,6 +28,7 @@ type WorkspaceNavBarProps = {
   items: WorkspaceNavItem[]
   className?: string
   defaultActive?: string
+  activeItem?: string
   onChange?: (name: string) => void
 }
 
@@ -42,22 +44,25 @@ export function WorkspaceNavBar({
   items,
   className,
   defaultActive = 'Home',
+  activeItem,
   onChange,
 }: WorkspaceNavBarProps) {
   const [hoveredTab, setHoveredTab] = React.useState<string | null>(null)
   const [activeTab, setActiveTab] = React.useState<string>(defaultActive)
   const buttonRefs = React.useRef<Record<string, HTMLButtonElement | null>>({})
   const [indicatorStyle, setIndicatorStyle] = React.useState({ left: 0, width: 0, opacity: 0 })
+  const resolvedActiveTab = activeItem ?? activeTab
 
   React.useEffect(() => {
+    if (activeItem) return
     if (!items.some((item) => item.name === activeTab)) {
       setActiveTab(defaultActive || items[0]?.name || '')
     }
-  }, [activeTab, defaultActive, items])
+  }, [activeItem, activeTab, defaultActive, items])
 
   React.useLayoutEffect(() => {
     const syncIndicator = () => {
-      const previewTab = hoveredTab ?? activeTab
+      const previewTab = hoveredTab ?? resolvedActiveTab
       const node = buttonRefs.current[previewTab]
       if (!node) {
         setIndicatorStyle((current) => ({ ...current, opacity: 0 }))
@@ -74,16 +79,16 @@ export function WorkspaceNavBar({
     syncIndicator()
     window.addEventListener('resize', syncIndicator)
     return () => window.removeEventListener('resize', syncIndicator)
-  }, [activeTab, hoveredTab, items])
+  }, [hoveredTab, items, resolvedActiveTab])
 
   if (!items.length) return null
 
   return (
     <div className={cn('flex justify-center', className)}>
-      <div className="relative inline-flex max-w-full items-center rounded-full border border-white/8 bg-[#0b0b0e] p-1 shadow-[0_16px_36px_-24px_rgba(0,0,0,0.9)]">
+      <div className="relative inline-flex max-w-full items-center rounded-full border border-white/10 bg-black/26 p-0.5 shadow-[0_14px_28px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl">
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-1 top-1 rounded-full border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0.06)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] transition-[transform,width,opacity] duration-200 ease-out"
+          className="pointer-events-none absolute bottom-0.5 top-0.5 rounded-full border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0.06)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_10px_24px_-20px_rgba(0,0,0,0.9)] transition-[transform,width,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{
             width: indicatorStyle.width,
             opacity: indicatorStyle.opacity,
@@ -93,7 +98,7 @@ export function WorkspaceNavBar({
 
         {items.map((item) => {
           const Icon = item.icon
-          const isActive = (hoveredTab ?? activeTab) === item.name
+          const isActive = (hoveredTab ?? resolvedActiveTab) === item.name
 
           return (
             <button
@@ -103,18 +108,20 @@ export function WorkspaceNavBar({
               }}
               type="button"
               onClick={() => {
-                setActiveTab(item.name)
+                if (!activeItem) {
+                  setActiveTab(item.name)
+                }
                 onChange?.(item.name)
               }}
               onMouseEnter={() => setHoveredTab(item.name)}
               onMouseLeave={() => setHoveredTab(null)}
               className={cn(
-                'relative z-10 inline-flex min-w-[84px] items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-colors duration-150',
+                'focus-ring-glow relative z-10 inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-medium tracking-[-0.01em] transition-[color,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-4.5',
                 isActive ? 'text-white' : 'text-white/56 hover:text-white/82',
               )}
             >
               {Icon ? <Icon className="size-3.5" /> : null}
-              <span>{item.name}</span>
+              <TextReveal as="span" text={item.name} split="line" delay={0.03} className="whitespace-nowrap" />
             </button>
           )
         })}

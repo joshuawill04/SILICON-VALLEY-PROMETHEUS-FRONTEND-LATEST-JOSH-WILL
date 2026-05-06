@@ -5,25 +5,26 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "focus-ring-glow inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[16px] text-sm font-medium tracking-[-0.01em] transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-0 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default:
+          'glass-surface-strong text-white shadow-[var(--glass-shadow)] hover:-translate-y-[1px] hover:border-white/16 hover:bg-white/[0.12] hover:text-white',
         destructive:
-          'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
+          'border border-rose-400/18 bg-[linear-gradient(180deg,rgba(120,26,38,0.92)_0%,rgba(92,18,30,0.96)_100%)] text-white shadow-[0_18px_34px_-24px_rgba(120,26,38,0.9)] hover:-translate-y-[1px] hover:border-rose-300/24 hover:bg-[linear-gradient(180deg,rgba(138,34,48,0.95)_0%,rgba(104,20,34,0.98)_100%)]',
         outline:
-          'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'glass-surface text-white/80 shadow-[var(--glass-shadow)] hover:-translate-y-[1px] hover:border-white/16 hover:bg-white/[0.08] hover:text-white',
         secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+          'border border-white/10 bg-white/[0.05] text-white/82 shadow-[0_14px_28px_-24px_rgba(0,0,0,0.9)] hover:-translate-y-[1px] hover:bg-white/[0.09] hover:text-white',
         ghost:
-          'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+          'border border-transparent bg-transparent text-white/68 shadow-none hover:-translate-y-[1px] hover:border-white/10 hover:bg-white/[0.06] hover:text-white',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
-        sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
-        lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
+        sm: 'h-8 rounded-[14px] gap-1.5 px-3 has-[>svg]:px-2.5',
+        lg: 'h-10 rounded-[18px] px-6 has-[>svg]:px-4',
         icon: 'size-9',
         'icon-sm': 'size-8',
         'icon-lg': 'size-10',

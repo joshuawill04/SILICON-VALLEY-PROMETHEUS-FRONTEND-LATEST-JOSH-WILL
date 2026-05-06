@@ -34,6 +34,9 @@ import {
 import { MusicPlayNotification } from '@/components/editor/music-play-notification'
 import { MusicSpotlightOrb } from '@/components/editor/music-spotlight-orb'
 import { MusicRecommendationShowcase } from '@/components/editor/music-recommendation-showcase'
+import { MusicTabPanel } from '@/components/editor/music-tab-panel'
+import { LuxuryVignette } from '@/components/editor/luxury-vignette'
+import { TextReveal } from '@/components/editor/text-reveal'
 import { CinematicPreviewRuntime } from '@/components/editor/cinematic-preview-runtime'
 import { EditWorkflowPanel } from '@/components/editor/edit-workflow-panel'
 import { EditorialComposerFrameAssist } from '@/components/editor/editorial-composer-frame-assist'
@@ -42,7 +45,6 @@ import { StagedMusicRail } from '@/components/editor/staged-music-rail'
 import { CinematicExportCluster } from '@/components/editor/cinematic-export-cluster'
 import { EditorLoadingScreen } from '@/components/editor/editor-loading-screen'
 import { InfinityTrailLoader } from '@/components/editor/infinity-trail-loader'
-import { ViralClipJobPanel } from '@/components/editor/viral-clip-job-panel'
 import { ViralClipSplitPreview } from '@/components/editor/viral-clip-split-preview'
 import { ViralClipTrigger } from '@/components/editor/viral-clip-trigger'
 import { useSourceStage } from '@/hooks/use-source-stage'
@@ -103,6 +105,7 @@ import type {
 import { SourceStagePlaceholder } from '@/components/editor/source-stage-placeholder'
 
 type LeftTabKey = 'chat' | 'edit' | 'design' | 'assets'
+type HeaderNavMode = 'Motion' | 'Music' | 'Output'
 type PreviewMediaKind = 'video' | 'image'
 type PreviewFitMode = 'fill' | 'fit'
 type BottomMode = 'Original' | 'Music' | 'Timeline'
@@ -166,6 +169,7 @@ type MusicApiResponse = MusicRecommendationPipelineResult & {
 const MUSIC_PREFERENCE_STORAGE_PREFIX = 'prometheus.editor.music-preferences.v1'
 const STAGED_MUSIC_STORAGE_PREFIX = 'prometheus.editor.staged-music.v1'
 const MUSIC_PREVIEW_VOLUME_STORAGE_PREFIX = 'prometheus.editor.music-preview-volume.v1'
+const SELECTED_EDITOR_MUSIC_STORAGE_PREFIX = 'prometheus.editor.selected-track.v1'
 const DEFAULT_MUSIC_PREVIEW_VOLUME = 0.34
 const MUSIC_INTENT_KEYWORDS = [
   'add music',
@@ -229,6 +233,10 @@ function musicPreviewVolumeStorageKey(projectId: string) {
   return `${MUSIC_PREVIEW_VOLUME_STORAGE_PREFIX}.${projectId}`
 }
 
+function selectedEditorMusicStorageKey(projectId: string) {
+  return `${SELECTED_EDITOR_MUSIC_STORAGE_PREFIX}.${projectId}`
+}
+
 function clampMusicPreviewVolume(value: number) {
   if (!Number.isFinite(value)) return DEFAULT_MUSIC_PREVIEW_VOLUME
   return Math.max(0, Math.min(1, value))
@@ -277,7 +285,6 @@ function removeChatEntry(entries: ChatEntry[], entryId: string) {
 }
 
 const HEADER_NAV_ITEMS: WorkspaceNavItem[] = [
-  { name: 'Prompt', icon: MessageSquare },
   { name: 'Motion', icon: Film },
   { name: 'Music', icon: Music4 },
   { name: 'Output', icon: Sparkles },
@@ -2887,6 +2894,7 @@ const ChatWorkspacePanel = React.memo(function ChatWorkspacePanel({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="relative min-h-0 flex-1 overflow-hidden">
+        <LuxuryVignette tone="neutral" />
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-4 top-3 z-20 h-px bg-[linear-gradient(90deg,rgba(127,242,212,0)_0%,rgba(127,242,212,0.56)_24%,rgba(255,255,255,0.16)_50%,rgba(127,242,212,0.32)_76%,rgba(127,242,212,0)_100%)]"
@@ -2899,7 +2907,7 @@ const ChatWorkspacePanel = React.memo(function ChatWorkspacePanel({
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-[linear-gradient(180deg,rgba(19,19,23,0)_0%,rgba(19,19,23,0.9)_62%,rgba(19,19,23,1)_100%)] blur-sm"
         />
-        <div ref={threadViewportRef} className="h-full overflow-y-auto overscroll-contain px-4 py-4 pb-32">
+        <div ref={threadViewportRef} className="premium-scroll-mask h-full overflow-y-auto overscroll-contain px-4 py-4 pb-32">
           <div ref={threadContentRef} className="space-y-4 pr-2">
         <motion.div
           variants={buildRevealVariants({ delay: 0.04, distance: 14, blur: 8, duration: 0.28 })}
@@ -2908,8 +2916,8 @@ const ChatWorkspacePanel = React.memo(function ChatWorkspacePanel({
           viewport={{ root: threadViewportRef, once: false, amount: 0.4 }}
           className="space-y-2"
         >
-          <div className="text-[10px] uppercase tracking-[0.34em] text-white/32">Project</div>
-          <h1 className="text-[1.85rem] leading-tight text-white">{projectTitle}</h1>
+          <TextReveal as="div" text="Project" delay={0.03} className="text-[10px] uppercase tracking-[0.34em] text-white/32" />
+          <TextReveal as="h1" text={projectTitle} split="words" delay={0.06} className="editor-display text-[1.85rem] leading-tight text-white" />
           <div className="flex items-center gap-2 text-xs text-white/42">
             <CheckCircle2 className="size-3.5 text-white/48" />
             All changes saved
@@ -2923,7 +2931,7 @@ const ChatWorkspacePanel = React.memo(function ChatWorkspacePanel({
           viewport={{ root: threadViewportRef, once: false, amount: 0.4 }}
           className="rounded-[18px] border border-white/8 bg-white/[0.02] p-4"
         >
-          <div className="text-[10px] uppercase tracking-[0.32em] text-white/35">Prompt</div>
+          <TextReveal as="div" text="Prompt" delay={0.06} className="text-[10px] uppercase tracking-[0.32em] text-white/35" />
           <p className="mt-3 text-sm leading-6 text-white/78">{initialPrompt}</p>
           {initialSources.length > 0 ? (
             <div className="mt-4 flex flex-wrap gap-2">
@@ -3218,7 +3226,7 @@ function SecondaryPanel({
         <div className="text-[10px] uppercase tracking-[0.32em] text-white/35">{title}</div>
         <p className="mt-3 text-sm leading-6 text-white/66">{description}</p>
       </motion.div>
-      <div ref={panelViewportRef} className="mt-4 space-y-2 overflow-y-auto">
+      <div ref={panelViewportRef} className="mt-4 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1">
         {items.map((item) => (
           <motion.div
             key={item}
@@ -3260,7 +3268,9 @@ export default function EditorPage() {
   const [isPreviewLoadingVisible, setIsPreviewLoadingVisible] = React.useState(false)
   const [isInlineSourceDragOver, setIsInlineSourceDragOver] = React.useState(false)
   const [previewFramePreset, setPreviewFramePreset] = React.useState<PreviewFramePreset>('source')
-  const [bottomMode, setBottomMode] = React.useState<BottomMode>('Music')
+  const [bottomMode, setBottomMode] = React.useState<BottomMode>('Original')
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = React.useState<HeaderNavMode>('Motion')
+  const [selectedEditorMusicTrackId, setSelectedEditorMusicTrackId] = React.useState<string | null>(null)
   const [viralClipTargetPlatform, setViralClipTargetPlatform] =
     React.useState<ViralClipTargetPlatform>(VIRAL_CLIP_PLATFORM_DEFAULT)
   const [viralClipClipPresetIndex, setViralClipClipPresetIndex] = React.useState(1)
@@ -3277,12 +3287,10 @@ export default function EditorPage() {
   const previewPlaybackCommandRef = React.useRef(0)
   const previewToggleCooldownRef = React.useRef<number | null>(null)
   const sourceFileInputRef = React.useRef<HTMLInputElement | null>(null)
-  const centerShellRef = React.useRef<HTMLElement | null>(null)
   const [chatComposerPortal, setChatComposerPortal] = React.useState<HTMLDivElement | null>(null)
   const [musicSpotlightPortalTarget, setMusicSpotlightPortalTarget] = React.useState<HTMLDivElement | null>(null)
   const inspectorViewportRef = React.useRef<HTMLDivElement | null>(null)
   const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = React.useState(false)
-  const [syncedColumnHeight, setSyncedColumnHeight] = React.useState<number | null>(null)
   const [isDeferredChromeReady, setIsDeferredChromeReady] = React.useState(false)
   const [cinematicRegistry, setCinematicRegistry] = React.useState<CinematicAssetRegistry | null>(null)
   const [inlinePreviewStatusVariant, setInlinePreviewStatusVariant] = React.useState<'hidden' | 'expanded' | 'icon'>('hidden')
@@ -3329,6 +3337,15 @@ export default function EditorPage() {
   React.useEffect(() => {
     clearPendingEditorNavigation(`/editor/${projectId}`)
   }, [projectId])
+
+  React.useEffect(() => {
+    const savedTrackId = readLocalStorageJSON<string | null>(selectedEditorMusicStorageKey(projectId))
+    setSelectedEditorMusicTrackId(typeof savedTrackId === 'string' ? savedTrackId : null)
+  }, [projectId])
+
+  React.useEffect(() => {
+    writeLocalStorageJSON(selectedEditorMusicStorageKey(projectId), selectedEditorMusicTrackId)
+  }, [projectId, selectedEditorMusicTrackId])
 
   React.useEffect(() => {
     const sessionSourcePreview = getSessionSourcePreview(projectId, project?.sourceAssetId ?? null)
@@ -3461,21 +3478,6 @@ export default function EditorPage() {
     upsertProject(nextProject)
     setProject(nextProject)
   }, [persistedPreviewUrl, project])
-
-  React.useEffect(() => {
-    const shell = centerShellRef.current
-    if (!shell || typeof ResizeObserver === 'undefined') return
-
-    const observer = new ResizeObserver(([entry]) => {
-      const nextHeight = Math.ceil(entry.contentRect.height)
-      setSyncedColumnHeight(nextHeight > 0 ? nextHeight : null)
-    })
-
-    observer.observe(shell)
-    setSyncedColumnHeight(Math.ceil(shell.getBoundingClientRect().height))
-
-    return () => observer.disconnect()
-  }, [])
 
   React.useEffect(() => {
     let rafId = 0
@@ -3656,13 +3658,37 @@ export default function EditorPage() {
 
   const promptText = job?.input.prompt?.trim() || 'Your clip is staged and ready for refinement.'
   const sourceList = React.useMemo(() => job?.input.sources ?? [], [job?.input.sources])
-  const videoContext = buildVideoMusicContext({
-    projectTitle: project?.title ?? 'Untitled Project',
-    promptText,
-    sourceProfile: project?.sourceProfile ?? null,
-    job,
-    sourceList,
-  })
+  const videoContext = React.useMemo(
+    () =>
+      buildVideoMusicContext({
+        projectTitle: project?.title ?? 'Untitled Project',
+        promptText,
+        sourceProfile: project?.sourceProfile ?? null,
+        job,
+        sourceList,
+      }),
+    [job, project?.sourceProfile, project?.title, promptText, sourceList],
+  )
+  const editorMusicShelf = React.useMemo(
+    () =>
+      buildMusicRecommendationSet({
+        query: promptText,
+        projectTitle: project?.title ?? 'Untitled Project',
+        initialPrompt: promptText,
+        videoContext,
+        limit: 5,
+        catalog: MUSIC_CATALOG,
+      }),
+    [project?.title, promptText, videoContext],
+  )
+  const editorMusicRecommendations = React.useMemo(
+    () => editorMusicShelf.recommendations.slice(0, 5),
+    [editorMusicShelf],
+  )
+  const selectedEditorMusicTrack = React.useMemo(
+    () => editorMusicRecommendations.find((track) => track.id === selectedEditorMusicTrackId) ?? null,
+    [editorMusicRecommendations, selectedEditorMusicTrackId],
+  )
   const viralClipClipPreset = VIRAL_CLIP_COUNT_PRESETS[viralClipClipPresetIndex] ?? VIRAL_CLIP_COUNT_PRESETS[1]!
   const viralClipProvidedTranscript = buildProvidedTranscript(job)
   const viralClipPrompt = React.useMemo(
@@ -3678,6 +3704,18 @@ export default function EditorPage() {
   )
 
   const previewOverlayPlan = job?.artifacts.animationPlan ?? null
+
+  const handleWorkspaceTabChange = React.useCallback((name: string) => {
+    if (name !== 'Motion' && name !== 'Music' && name !== 'Output') return
+    setActiveWorkspaceTab(name)
+    if (name === 'Music') {
+      setBottomMode('Music')
+    }
+  }, [])
+
+  const handleEditorMusicTrackSelect = React.useCallback((track: MusicRecommendation) => {
+    setSelectedEditorMusicTrackId(track.id)
+  }, [])
 
   React.useEffect(() => {
     if (!cinematicRegistry || !previewOverlayPlan || !job?.input.prompt) return
@@ -4300,7 +4338,7 @@ export default function EditorPage() {
             initialPrompt={promptText}
             initialSources={sourceList}
             videoContext={videoContext}
-            composerPortalTarget={showViralClipSplitPreview ? null : chatComposerPortal}
+            composerPortalTarget={showViralClipSplitPreview || activeWorkspaceTab === 'Music' ? null : chatComposerPortal}
             musicSpotlightPortalTarget={isDeferredChromeReady ? musicSpotlightPortalTarget : null}
             onEditRequest={handleEditRequest}
           />
@@ -4312,7 +4350,7 @@ export default function EditorPage() {
     <EditorLoadingScreen caption="Opening editor..." />
   ) : (
     <>
-      <div className="relative h-screen overflow-hidden bg-[#07070a] text-white">
+      <div className="relative h-[100dvh] overflow-hidden bg-[#07070a] text-white">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(84,69,126,0.24)_0%,rgba(84,69,126,0.08)_24%,rgba(7,7,10,0)_56%),linear-gradient(180deg,rgba(16,14,24,0.72)_0%,rgba(7,7,10,1)_42%)]"
@@ -4322,9 +4360,9 @@ export default function EditorPage() {
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:100%_44px] opacity-[0.06]"
       />
 
-      <div className="relative flex h-screen flex-col overflow-hidden">
-        <header className="relative z-30 border-b border-white/8">
-          <div className="mx-auto flex w-full max-w-[1580px] flex-col gap-4 px-4 py-4 lg:px-6">
+      <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
+        <header className="relative z-30 shrink-0 border-b border-white/8">
+          <div className="mx-auto flex w-full max-w-[1580px] flex-col gap-4 px-4 py-[clamp(0.875rem,1.8vh,1rem)] lg:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <motion.button
                 type="button"
@@ -4363,9 +4401,13 @@ export default function EditorPage() {
                 viewport={{ once: false, amount: 0.45 }}
                 className="min-w-0"
               >
-                <div className="truncate text-[1.45rem] leading-tight text-white">
-                  {project?.title ?? 'Loading project...'}
-                </div>
+                <TextReveal
+                  as="div"
+                  text={project?.title ?? 'Loading project...'}
+                  split="words"
+                  delay={0.08}
+                  className="editor-display truncate text-[1.45rem] leading-tight text-white"
+                />
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-white/42">
                   <span className="inline-flex items-center gap-2">
                     <CheckCircle2 className="size-3.5" />
@@ -4382,7 +4424,13 @@ export default function EditorPage() {
                 viewport={{ once: false, amount: 0.45 }}
                 className="xl:flex-1"
               >
-                <WorkspaceNavBar items={HEADER_NAV_ITEMS} defaultActive="Prompt" className="xl:flex-1" />
+                <WorkspaceNavBar
+                  items={HEADER_NAV_ITEMS}
+                  defaultActive="Motion"
+                  activeItem={activeWorkspaceTab}
+                  onChange={handleWorkspaceTabChange}
+                  className="xl:flex-1"
+                />
               </motion.div>
 
               <motion.div
@@ -4401,23 +4449,23 @@ export default function EditorPage() {
           </div>
         </header>
 
-        <main className="relative z-20 mx-auto flex w-full max-w-[1580px] flex-1 min-h-0 overflow-hidden px-3 py-3 lg:px-6 lg:py-4">
+        <main className="relative z-20 mx-auto flex min-h-0 w-full max-w-[1580px] flex-1 overflow-hidden px-3 py-3 lg:px-5 lg:py-4 xl:px-6">
           <div
             className={cn(
-              'grid h-full min-h-0 w-full items-start gap-3 overflow-hidden',
+              'grid h-full min-h-0 w-full grid-rows-[minmax(0,1fr)] items-stretch gap-[clamp(0.75rem,1vw,1rem)] overflow-hidden',
               isLeftPanelCollapsed
-                ? 'lg:grid-cols-[84px_minmax(0,1fr)] xl:grid-cols-[84px_minmax(0,1fr)_290px]'
-                : 'lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_290px]',
+                ? 'lg:grid-cols-[84px_minmax(0,1fr)] xl:grid-cols-[84px_minmax(0,1fr)_clamp(17rem,20vw,20.5rem)]'
+                : 'lg:grid-cols-[clamp(17rem,22vw,19.75rem)_minmax(0,1fr)] xl:grid-cols-[clamp(17rem,22vw,19.75rem)_minmax(0,1fr)_clamp(17rem,20vw,20.5rem)]',
             )}
           >
             <motion.aside
               layout
               className={cn(
-                'flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#131317] transition-[width,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                'premium-ambient-panel premium-vignette-surface flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#131317] overscroll-contain transition-[width,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
                 isLeftPanelCollapsed && 'lg:rounded-[26px]',
               )}
-              style={syncedColumnHeight ? { height: syncedColumnHeight } : undefined}
             >
+              <LuxuryVignette tone="neutral" />
               <motion.div
                 variants={buildRevealVariants({ delay: 0.08, distance: 12, blur: 8, duration: 0.26 })}
                 initial="hidden"
@@ -4427,21 +4475,21 @@ export default function EditorPage() {
               >
                 <div className="flex items-center justify-between gap-2">
                   {!isLeftPanelCollapsed ? (
-                    <div className="grid flex-1 grid-cols-4 gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {LEFT_TABS.map(({ key, label, icon: Icon }) => (
                         <button
                           key={key}
                           type="button"
                           onClick={() => setLeftTab(key)}
                           className={cn(
-                            'inline-flex items-center justify-center gap-2 rounded-[14px] px-3 py-2 text-sm transition-colors',
+                            'inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-3.5 py-2 text-sm transition-colors',
                             leftTab === key
-                              ? 'bg-white/[0.10] text-white'
-                              : 'text-white/48 hover:bg-white/[0.04] hover:text-white/82',
+                              ? 'border border-white/10 bg-white/[0.08] text-white'
+                              : 'border border-transparent text-white/48 hover:bg-white/[0.04] hover:text-white/82',
                           )}
                         >
                           <Icon className="size-4" />
-                          <span className="hidden sm:inline">{label}</span>
+                          <span>{label}</span>
                         </button>
                       ))}
                     </div>
@@ -4467,7 +4515,7 @@ export default function EditorPage() {
                   animate={isLeftPanelCollapsed ? 'hidden' : 'visible'}
                   exit="exit"
                   className={cn(
-                    'min-h-0 flex-1',
+                    'min-h-0 flex-1 overflow-hidden',
                     isLeftPanelCollapsed ? 'pointer-events-none invisible' : 'visible',
                   )}
                   aria-hidden={isLeftPanelCollapsed}
@@ -4477,55 +4525,64 @@ export default function EditorPage() {
               </AnimatePresence>
             </motion.aside>
 
-            <section
-              ref={centerShellRef}
-              className="relative self-start flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#111115]"
-            >
-              <motion.div
-                variants={buildRevealVariants({ delay: 0.08, distance: 12, blur: 8, duration: 0.26 })}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: false, amount: 0.45 }}
-                className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 px-4 py-4"
+            <section className="premium-ambient-panel premium-vignette-surface relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#111115]">
+              <LuxuryVignette tone={activeWorkspaceTab === 'Music' ? 'music' : 'cool'} />
+              {activeWorkspaceTab !== 'Music' ? (
+                <motion.div
+                  variants={buildRevealVariants({ delay: 0.08, distance: 12, blur: 8, duration: 0.26 })}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: false, amount: 0.45 }}
+                  className="shrink-0 border-b border-white/8 px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="inline-flex items-center gap-2 text-white/48">
+                      <ViralClipTrigger
+                        active={clipModeActive || viralClipTriggerBusy}
+                        processing={viralClipTriggerBusy}
+                        disabled={clipModeActive || viralClipTriggerBusy}
+                        onLockedHoverChange={setIsLockedViralClipTriggerHovered}
+                        onActivate={() => {
+                          void handleGenerateViralClips()
+                        }}
+                      />
+                      <button type="button" className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72">
+                        <Sparkles className="size-4" />
+                      </button>
+                      <button type="button" className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72">
+                        <Layers3 className="size-4" />
+                      </button>
+                      <button type="button" className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72">
+                        <SlidersHorizontal className="size-4" />
+                      </button>
+                    </div>
+
+                    <div className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5 text-xs text-white/52">
+                      Preview may be choppy. Exports stay frame-perfect.
+                    </div>
+                  </div>
+                </motion.div>
+              ) : null}
+
+              <div
+                className={cn(
+                  'flex min-h-0 flex-1 flex-col px-4',
+                  activeWorkspaceTab === 'Music'
+                    ? 'overflow-hidden py-4'
+                    : 'overflow-y-auto overscroll-contain py-3',
+                )}
               >
-                <div className="inline-flex items-center gap-2 text-white/48">
-                  <ViralClipTrigger
-                    active={clipModeActive || viralClipTriggerBusy}
-                    processing={viralClipTriggerBusy}
-                    disabled={clipModeActive || viralClipTriggerBusy}
-                    onLockedHoverChange={setIsLockedViralClipTriggerHovered}
-                    onActivate={() => {
-                      void handleGenerateViralClips()
-                    }}
+                {activeWorkspaceTab === 'Music' ? (
+                  <MusicTabPanel
+                    tracks={editorMusicRecommendations}
+                    projectTitle={project?.title ?? 'Untitled Project'}
+                    selectedTrackId={selectedEditorMusicTrackId}
+                    reasoningSummary={editorMusicShelf.reasoningSummary}
+                    onSelectTrack={handleEditorMusicTrackSelect}
                   />
-                  <button type="button" className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72">
-                    <Sparkles className="size-4" />
-                  </button>
-                  <button type="button" className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72">
-                    <Layers3 className="size-4" />
-                  </button>
-                  <button type="button" className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72">
-                    <SlidersHorizontal className="size-4" />
-                  </button>
-                </div>
+                ) : null}
 
-                <div className="rounded-[16px] border border-white/8 bg-[#17171d] px-4 py-2 text-center text-xs leading-5 text-white/58">
-                  Preview may be choppy on this device. Exports stay frame-perfect.
-                </div>
-
-                <div className="text-xs text-white/35">
-                  {hasSourceAsset
-                    ? job?.status === 'completed'
-                      ? 'Ready for export'
-                      : 'Staging current pass'
-                    : sourceStageError
-                      ? 'Source required'
-                      : 'Awaiting source upload'}
-                </div>
-              </motion.div>
-
-              <div className="flex min-h-0 flex-col px-4 py-3">
-                <div className="w-full max-w-[860px] self-center rounded-[18px] border border-white/8 bg-[#09090c] p-3">
+                <div className={cn('w-full max-w-[min(100%,54rem)] self-center rounded-[18px] border border-white/8 bg-[#09090c] p-3', activeWorkspaceTab === 'Music' && 'hidden')}>
                   <div className="flex h-[clamp(250px,40vh,460px)] items-center justify-center rounded-[14px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0)_100%)] p-4">
                     <div className="relative flex h-full w-full items-center justify-center">
                       <div
@@ -4659,17 +4716,6 @@ export default function EditorPage() {
                                 )}
                               </CinematicPreviewRuntime>
 
-                              {previewKind === 'video' && hasPreviewMedia && !previewPlaying && !showViralClipSplitPreview ? (
-                                <button
-                                  type="button"
-                                  onClick={handlePreviewPlayRequest}
-                                  className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/58 px-3 py-1.5 text-[11px] text-white/86 shadow-[0_18px_30px_-22px_rgba(0,0,0,0.95)] backdrop-blur-md transition-colors hover:bg-black/72"
-                                >
-                                  <Play className="size-3 fill-current" />
-                                  Play preview
-                                </button>
-                              ) : null}
-
                               {showInlinePreviewStatus ? (
                                 <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-5">
                                   <motion.button
@@ -4750,89 +4796,56 @@ export default function EditorPage() {
                   </div>
                 </div>
 
-                {hasSourceAsset || viralClipLifecycle !== 'idle' ? (
-                  <ViralClipJobPanel
-                    backendHealth={viralClipBackendHealth}
-                    lifecycle={viralClipLifecycle}
-                    backendStage={viralClipBackendStage}
-                    stageLabel={viralClipStageLabel}
-                    stageDetail={viralClipStageDetail}
-                    jobId={viralClipJobId}
-                    progressPercent={viralClipProgressPercent}
-                    warnings={viralClipWarnings}
-                    statusMessage={viralClipStatusMessage}
-                    errorMessage={viralClipErrorMessage}
-                    resultError={viralClipResultError}
-                    selectedClips={viralClipSelectedClips}
-                    targetPlatform={viralClipTargetPlatform}
-                    clipCountMin={viralClipClipPreset.min}
-                    clipCountMax={viralClipClipPreset.max}
-                    onTargetPlatformChange={setViralClipTargetPlatform}
-                    onClipCountPresetChange={(preset) => {
-                      const nextPresetIndex = VIRAL_CLIP_COUNT_PRESETS.findIndex(
-                        (candidate) => candidate.min === preset.min && candidate.max === preset.max,
-                      )
-                      if (nextPresetIndex >= 0) {
-                        setViralClipClipPresetIndex(nextPresetIndex)
-                      }
-                    }}
-                    onRefreshHealth={() => {
-                      void refreshViralClipBackendHealth()
-                    }}
-                    onRefreshResult={() => {
-                      void refreshViralClipResult()
-                    }}
-                  />
-                ) : null}
+                <div className={cn('w-full max-w-[min(100%,54rem)] self-center', activeWorkspaceTab === 'Music' && 'hidden')}>
+                  <div className="mt-2.5 flex w-full flex-wrap items-center gap-3 rounded-[20px] border border-white/8 bg-[#0c0c10] px-4 py-2.5">
+                    <button
+                      type="button"
+                      onClick={togglePreviewPlayback}
+                      disabled={previewKind !== 'video' || !previewUrl}
+                      className="grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-white/76 transition-colors hover:text-white disabled:cursor-not-allowed disabled:text-white/28"
+                    >
+                      {previewPlaying ? <Pause className="size-4" /> : <Play className="size-4 fill-current" />}
+                    </button>
 
-                <div className="mt-2.5 flex w-full max-w-[860px] flex-wrap items-center gap-3 self-center rounded-[20px] border border-white/8 bg-[#0c0c10] px-4 py-2.5">
-                  <button
-                    type="button"
-                    onClick={togglePreviewPlayback}
-                    disabled={previewKind !== 'video' || !previewUrl}
-                    className="grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-white/76 transition-colors hover:text-white disabled:cursor-not-allowed disabled:text-white/28"
-                  >
-                    {previewPlaying ? <Pause className="size-4" /> : <Play className="size-4 fill-current" />}
-                  </button>
+                    <div className="min-w-[84px] text-sm text-white/72">
+                      {transportCurrentTime} / {transportTime}
+                    </div>
 
-                  <div className="min-w-[84px] text-sm text-white/72">
-                    {transportCurrentTime} / {transportTime}
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={transportProgress}
+                      onChange={(event) => handlePreviewSeek(Number(event.target.value))}
+                      disabled={previewKind !== 'video' || !previewUrl}
+                      className="h-1.5 flex-1 accent-white disabled:cursor-not-allowed disabled:opacity-40"
+                    />
+
+                    <button
+                      type="button"
+                      className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-white/54 transition-colors hover:text-white/82"
+                    >
+                      <Volume2 className="size-4" />
+                    </button>
                   </div>
 
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={transportProgress}
-                    onChange={(event) => handlePreviewSeek(Number(event.target.value))}
-                    disabled={previewKind !== 'video' || !previewUrl}
-                    className="h-1.5 flex-1 accent-white disabled:cursor-not-allowed disabled:opacity-40"
-                  />
-
-                  <button
-                    type="button"
-                    className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-white/54 transition-colors hover:text-white/82"
-                  >
-                    <Volume2 className="size-4" />
-                  </button>
-                </div>
-
-                <div className="mt-2 flex w-full max-w-[860px] flex-wrap items-center justify-center gap-2 self-center">
-                  {BOTTOM_MODES.map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setBottomMode(mode)}
-                      className={cn(
-                        'rounded-full border px-4 py-2 text-xs transition-colors',
-                        bottomMode === mode
-                          ? 'border-white/14 bg-white/[0.10] text-white'
-                          : 'border-white/8 bg-white/[0.03] text-white/56 hover:text-white/78',
-                      )}
+                  <div className="mt-2 flex w-full flex-wrap items-center justify-center gap-2">
+                    {BOTTOM_MODES.map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setBottomMode(mode)}
+                        className={cn(
+                          'rounded-full border px-4 py-2 text-xs transition-colors',
+                          bottomMode === mode
+                            ? 'border-white/14 bg-white/[0.10] text-white'
+                            : 'border-white/8 bg-white/[0.03] text-white/56 hover:text-white/78',
+                        )}
                       >
-                      {mode}
-                    </button>
-                  ))}
+                        {mode}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
               </div>
@@ -4840,9 +4853,9 @@ export default function EditorPage() {
 
             <motion.aside
               layout
-              className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#131317] lg:col-span-2 xl:col-span-1"
-              style={syncedColumnHeight ? { height: syncedColumnHeight } : undefined}
+              className="premium-ambient-panel premium-vignette-surface flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#131317] overscroll-contain lg:col-span-2 xl:col-span-1"
             >
+              <LuxuryVignette tone="cool" />
               <motion.div
                 variants={buildRevealVariants({ delay: 0.1, distance: 12, blur: 8, duration: 0.26 })}
                 initial="hidden"
@@ -4851,8 +4864,8 @@ export default function EditorPage() {
                 className="flex items-center justify-between border-b border-white/8 px-4 py-4"
               >
                 <div>
-                  <div className="text-sm text-white">Video</div>
-                  <div className="mt-1 text-xs text-white/38">Transform and frame the current source.</div>
+                  <TextReveal as="div" text="Video" delay={0.04} className="text-sm text-white" />
+                  <TextReveal as="div" text="Transform and frame the current source." delay={0.08} className="mt-1 text-xs text-white/38" />
                 </div>
                 <button
                   type="button"
@@ -4862,7 +4875,7 @@ export default function EditorPage() {
                 </button>
               </motion.div>
 
-              <div ref={inspectorViewportRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+              <div ref={inspectorViewportRef} className="premium-scroll-mask min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
                 <motion.div
                   variants={buildRevealVariants({ delay: 0.14, distance: 14, blur: 10, duration: 0.28 })}
                   initial="hidden"
@@ -4890,14 +4903,11 @@ export default function EditorPage() {
                         <div className="font-medium text-white/88">{previewFrameLabel(framePreset)}</div>
                         <div className="mt-1 text-[11px] text-white/42">
                           {framePreset === 'source'
-                            ? 'Auto uses the loaded media shape.'
-                            : `Render the preview in ${framePreset} format.`}
+                            ? 'Uses the source shape.'
+                            : `${framePreset} output frame.`}
                         </div>
                       </button>
                     ))}
-                  </div>
-                  <div className="mt-3 text-xs leading-5 text-white/46">
-                    Auto detects the media shape first, then lets you switch the frame if you want a different delivery ratio.
                   </div>
                   {clipModeActive ? (
                     <div className="mt-3 rounded-[14px] border border-[#9ff6e3]/16 bg-[#9ff6e3]/[0.06] px-3 py-2 text-[11px] leading-5 text-[#dffdf5]">

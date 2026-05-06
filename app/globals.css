@@ -5,6 +5,7 @@
 
 :root {
   --font-newsreader: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-ui: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -38,6 +39,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+  --glass-fill: linear-gradient(180deg, rgba(18, 20, 28, 0.82) 0%, rgba(10, 11, 16, 0.9) 100%);
+  --glass-fill-strong: linear-gradient(180deg, rgba(26, 28, 39, 0.92) 0%, rgba(11, 12, 18, 0.96) 100%);
+  --glass-shadow: 0 24px 60px -34px rgba(0, 0, 0, 0.72);
+  --glass-shadow-lg: 0 40px 110px -58px rgba(0, 0, 0, 0.82);
+  --focus-glow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 0 5px rgba(111, 184, 255, 0.12);
 }
 
 .dark {
@@ -76,7 +84,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-newsreader);
+  --font-sans: var(--font-ui);
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -161,11 +169,26 @@
 }
 
 @layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at top, rgba(76, 88, 126, 0.18) 0%, rgba(76, 88, 126, 0.06) 22%, rgba(5, 6, 10, 0) 54%),
+      linear-gradient(180deg, rgba(8, 9, 14, 0.98) 0%, rgba(5, 6, 10, 1) 100%);
+    color-scheme: dark;
+  }
+
+  ::selection {
+    background: rgba(112, 170, 255, 0.28);
+    color: white;
   }
 
   button:not(:disabled),
@@ -220,6 +243,37 @@
     stroke-dasharray: 12 88;
     animation: editor-infinity-head 1.7s linear infinite;
     will-change: stroke-dashoffset;
+  }
+
+  .glass-surface {
+    border: 1px solid var(--glass-border);
+    background: var(--glass-fill);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      var(--glass-shadow);
+    backdrop-filter: blur(18px) saturate(1.14);
+  }
+
+  .glass-surface-strong {
+    border: 1px solid var(--glass-border-strong);
+    background: var(--glass-fill-strong);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      var(--glass-shadow-lg);
+    backdrop-filter: blur(24px) saturate(1.2);
+  }
+
+  .glass-pill {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, rgba(20, 22, 31, 0.86) 0%, rgba(11, 12, 18, 0.92) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 18px 40px -28px rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(18px) saturate(1.12);
+  }
+
+  .focus-ring-glow {
+    box-shadow: var(--focus-glow);
   }
 
   [data-slot='button'] {
@@ -422,6 +476,12 @@
     [data-slot='collapsible-trigger'][data-state='open'] {
       transform: none;
       filter: none;
+    }
+
+    .glass-surface,
+    .glass-surface-strong,
+    .glass-pill {
+      backdrop-filter: none;
     }
   }
 }

@@ -32,16 +32,16 @@ export function WorkspaceFrame({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden font-sans">
+    <div className="relative h-[100dvh] w-full overflow-hidden font-sans">
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_14%_2%,rgba(212,176,255,0.14)_0%,rgba(34,14,58,0.08)_38%,rgba(0,0,0,0)_68%),linear-gradient(180deg,rgba(14,9,24,0.96)_0%,rgba(6,4,10,1)_100%)]" />
-      <IsoLevelWarp color="168, 124, 255" density={32} speed={1.15} />
+      <IsoLevelWarp color="168, 124, 255" density={32} speed={0.28} />
 
       <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_14%_2%,rgba(212,176,255,0.22)_0%,rgba(34,14,58,0.12)_38%,rgba(0,0,0,0)_68%),linear-gradient(180deg,rgba(12,7,20,0.62)_0%,rgba(6,4,10,0.84)_100%)]" />
 
-      <div className="relative z-10 flex h-screen w-full">
+      <div className="relative z-10 flex h-full min-h-0 w-full">
         {shouldRenderSidebar ? <DashboardSidebar /> : null}
 
-        <div className="relative z-10 flex h-screen flex-1 flex-col overflow-hidden">{children}</div>
+        <div className="relative z-10 flex h-full min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
       </div>
     </div>
   )

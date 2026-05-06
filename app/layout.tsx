@@ -1,13 +1,21 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import localFont from 'next/font/local'
 import { RootClientEffects } from '@/components/root-client-effects'
 import { WorkspaceFrame } from '@/components/workspace-frame'
 import './globals.css'
+import './premium-vignette.css'
+
+const vogueDisplay = localFont({
+  src: '../Vogue.ttf',
+  variable: '--font-vogue-display',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Prometheus',
+  description: 'Premium creator infrastructure for cinematic editing, music selection, and export polish.',
+  generator: 'Prometheus',
   icons: {
     icon: [
       {
@@ -34,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className="font-sans antialiased">
+      <body className={`${vogueDisplay.variable} bg-[#05060a] font-sans text-foreground antialiased`}>
         <WorkspaceFrame>{children}</WorkspaceFrame>
         <RootClientEffects />
         <Analytics />
