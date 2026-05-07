@@ -238,6 +238,8 @@ export interface Project {
   previewKind?: 'video' | 'image'
   sourceProfile?: SourceProfile
   sourceAssetId?: Id
+  editorState?: any
+  animationPlan?: AnimationPlan
 }
 
 export type MusicMood = 'cinematic' | 'uplifting' | 'dark' | 'minimal' | 'playful'
