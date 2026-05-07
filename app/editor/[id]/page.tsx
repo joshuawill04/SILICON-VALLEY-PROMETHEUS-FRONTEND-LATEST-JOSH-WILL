@@ -34,6 +34,7 @@ import {
 import { MusicPlayNotification } from '@/components/editor/music-play-notification'
 import { MusicSpotlightOrb } from '@/components/editor/music-spotlight-orb'
 import { MusicRecommendationShowcase } from '@/components/editor/music-recommendation-showcase'
+import { AiLampDialog } from '@/components/editor/ai-lamp-dialog'
 import { MusicTabPanel } from '@/components/editor/music-tab-panel'
 import { LuxuryVignette } from '@/components/editor/luxury-vignette'
 import { TextReveal } from '@/components/editor/text-reveal'
@@ -3270,6 +3271,7 @@ export default function EditorPage() {
   const [previewFramePreset, setPreviewFramePreset] = React.useState<PreviewFramePreset>('source')
   const [bottomMode, setBottomMode] = React.useState<BottomMode>('Original')
   const [activeWorkspaceTab, setActiveWorkspaceTab] = React.useState<HeaderNavMode>('Motion')
+  const [isAiLampOpen, setIsAiLampOpen] = React.useState(false)
   const [selectedEditorMusicTrackId, setSelectedEditorMusicTrackId] = React.useState<string | null>(null)
   const [viralClipTargetPlatform, setViralClipTargetPlatform] =
     React.useState<ViralClipTargetPlatform>(VIRAL_CLIP_PLATFORM_DEFAULT)
@@ -4022,6 +4024,66 @@ export default function EditorPage() {
     ],
   )
 
+  const handleAiChatOpen = React.useCallback(() => {
+    setIsAiLampOpen(false)
+    setIsLeftPanelCollapsed(false)
+    setLeftTab('chat')
+    setActiveWorkspaceTab('Motion')
+    setBottomMode('Original')
+  }, [])
+
+  const handleAiEditLaunch = React.useCallback(
+    (label: string) => {
+      const styleTemplate = selectEditStyleTemplate(label, videoContext)
+      const editPrompt = buildEditQuickActionPrompt(project?.title ?? 'Untitled Project', videoContext, styleTemplate)
+      const prompt = label === 'Edit this video' ? editPrompt : `${label}. ${editPrompt}`
+
+      setIsAiLampOpen(false)
+      setIsLeftPanelCollapsed(false)
+      setLeftTab('chat')
+      setActiveWorkspaceTab('Motion')
+      setBottomMode('Original')
+      handleEditRequest({ prompt, styleTemplate })
+    },
+    [handleEditRequest, project?.title, videoContext],
+  )
+
+  const handleAiMusicOpen = React.useCallback(() => {
+    setIsAiLampOpen(false)
+    setActiveWorkspaceTab('Music')
+    setBottomMode('Music')
+  }, [])
+
+  const aiLampActions = React.useMemo(
+    () => [
+      {
+        label: 'Open chat lane',
+        description: 'Jump into the editorial conversation and steer the next pass directly.',
+        icon: MessageSquare,
+        onSelect: handleAiChatOpen,
+      },
+      {
+        label: 'Edit this video',
+        description: 'Launch a polished first pass tuned to the current project context.',
+        icon: PenSquare,
+        onSelect: () => handleAiEditLaunch('Edit this video'),
+      },
+      {
+        label: 'Generate rough cuts',
+        description: 'Start a faster structure pass focused on trims, hooks, and pacing.',
+        icon: Wand2,
+        onSelect: () => handleAiEditLaunch('Generate rough cuts'),
+      },
+      {
+        label: 'Add music',
+        description: 'Open the soundtrack chamber and shape the emotional lane there.',
+        icon: Music4,
+        onSelect: handleAiMusicOpen,
+      },
+    ],
+    [handleAiChatOpen, handleAiEditLaunch, handleAiMusicOpen],
+  )
+
   React.useEffect(() => {
     setPreviewPlaying(false)
     setPreviewCurrentTimeSec(0)
@@ -4481,15 +4543,15 @@ export default function EditorPage() {
                           key={key}
                           type="button"
                           onClick={() => setLeftTab(key)}
+                          aria-label={label}
                           className={cn(
-                            'inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-3.5 py-2 text-sm transition-colors',
+                            'inline-flex size-10 shrink-0 items-center justify-center rounded-full text-sm transition-colors',
                             leftTab === key
                               ? 'border border-white/10 bg-white/[0.08] text-white'
                               : 'border border-transparent text-white/48 hover:bg-white/[0.04] hover:text-white/82',
                           )}
                         >
                           <Icon className="size-4" />
-                          <span>{label}</span>
                         </button>
                       ))}
                     </div>
@@ -4546,7 +4608,12 @@ export default function EditorPage() {
                           void handleGenerateViralClips()
                         }}
                       />
-                      <button type="button" className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72">
+                      <button
+                        type="button"
+                        onClick={() => setIsAiLampOpen(true)}
+                        aria-label="Open AI direction"
+                        className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72"
+                      >
                         <Sparkles className="size-4" />
                       </button>
                       <button type="button" className="grid size-9 place-items-center rounded-full border border-white/8 bg-white/[0.02] transition-colors hover:text-white/72">
@@ -4577,7 +4644,6 @@ export default function EditorPage() {
                     tracks={editorMusicRecommendations}
                     projectTitle={project?.title ?? 'Untitled Project'}
                     selectedTrackId={selectedEditorMusicTrackId}
-                    reasoningSummary={editorMusicShelf.reasoningSummary}
                     onSelectTrack={handleEditorMusicTrackSelect}
                   />
                 ) : null}
@@ -5185,6 +5251,14 @@ export default function EditorPage() {
         </main>
       </div>
       </div>
+      <AiLampDialog
+        open={isAiLampOpen}
+        onOpenChange={setIsAiLampOpen}
+        badge="Prometheus AI"
+        title="Shape the next pass"
+        description="Call up a directed AI lane for this project without leaving the chamber. Pick the route you want, and Prometheus will move the edit, music, or chat flow forward from there."
+        actions={aiLampActions}
+      />
       <div
         ref={setChatComposerPortal}
         aria-hidden

@@ -139,38 +139,122 @@
       inset 0 -56px 72px -64px rgba(0, 0, 0, 0.95);
   }
 
-  .music-art-zone {
+  .music-hero-shell {
+    position: relative;
+    isolation: isolate;
+    backdrop-filter: blur(18px) saturate(1.04);
+  }
+
+  .music-hero-shell::before,
+  .music-hero-shell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .music-hero-shell::before {
+    background:
+      linear-gradient(145deg, rgba(151, 60, 82, 0.08) 0%, rgba(151, 60, 82, 0) 28%, rgba(255, 255, 255, 0) 62%, rgba(78, 112, 188, 0.08) 100%);
+    opacity: 0.9;
+  }
+
+  .music-hero-shell::after {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 18%, rgba(0, 0, 0, 0.16) 100%);
+  }
+
+  .music-disc-safe-stage {
     position: relative;
     overflow: visible;
   }
 
-  .music-art-zone::before,
-  .music-art-zone::after {
+  .music-disc-safe-stage::before,
+  .music-disc-safe-stage::after {
     content: '';
     position: absolute;
     pointer-events: none;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .music-disc-safe-stage::before {
+    bottom: 2.4rem;
+    width: min(16rem, 72%);
+    height: 1.35rem;
     border-radius: 999px;
+    background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.18) 48%, rgba(0, 0, 0, 0) 100%);
+    filter: blur(14px);
+    opacity: 0.88;
   }
 
-  .music-art-zone::before {
-    left: -2rem;
-    bottom: -1.75rem;
-    width: 17rem;
-    height: 17rem;
+  .music-disc-safe-stage::after {
+    inset: 1rem 1rem 0.75rem 1rem;
+    left: auto;
+    transform: none;
+    border-radius: 1.8rem;
     background:
-      radial-gradient(circle at 34% 64%, rgba(255, 104, 104, 0.22) 0%, rgba(255, 104, 104, 0.08) 32%, rgba(255, 104, 104, 0) 72%),
-      radial-gradient(circle at 62% 28%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 54%);
-    filter: blur(42px);
-    opacity: 0.84;
+      linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0) 22%, rgba(0, 0, 0, 0.12) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
   }
 
-  .music-art-zone::after {
-    inset: 1.25rem 1rem 0.5rem 0.25rem;
-    border-radius: 2rem;
+  .premium-song-scroller {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    isolation: isolate;
+  }
+
+  .premium-song-scroller::after {
+    display: none;
+  }
+
+  .premium-song-scroller-viewport {
+    position: relative;
+    z-index: 1;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 10%, black 90%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, black 10%, black 90%, transparent 100%);
+  }
+
+  .premium-song-scroller-content {
+    min-height: 100%;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  .premium-song-scroller-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3.85rem;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .premium-song-scroller-overlay-top {
+    top: 0;
     background:
-      radial-gradient(circle at 16% 84%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 38%),
-      radial-gradient(circle at 50% 22%, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 42%),
-      linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 44%, rgba(0, 0, 0, 0.18) 100%);
-    opacity: 0.92;
+      linear-gradient(180deg, rgba(8, 10, 16, 0.92) 0%, rgba(8, 10, 16, 0.58) 42%, rgba(8, 10, 16, 0) 100%);
+  }
+
+  .premium-song-scroller-overlay-bottom {
+    bottom: 0;
+    background:
+      linear-gradient(180deg, rgba(8, 10, 16, 0) 0%, rgba(8, 10, 16, 0.62) 58%, rgba(8, 10, 16, 0.94) 100%);
+  }
+
+  .premium-song-scroller-sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.008) 18%, rgba(255, 255, 255, 0) 34%);
+    opacity: 0.56;
   }
 }
