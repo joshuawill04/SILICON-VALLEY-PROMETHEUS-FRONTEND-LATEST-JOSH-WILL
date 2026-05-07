@@ -13,8 +13,8 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
   const [billingAllowed, setBillingAllowed] = React.useState(false)
 
   React.useEffect(() => {
-    const allowed = hasBillingAccess()
-    setBillingAllowed(allowed)
+    // const allowed = hasBillingAccess() // Original line
+    setBillingAllowed(true) // Always allow access for prototype stage
     setBillingResolved(true)
   }, [])
 
