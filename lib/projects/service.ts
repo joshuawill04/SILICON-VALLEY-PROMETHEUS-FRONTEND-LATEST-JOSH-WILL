@@ -46,7 +46,12 @@ export const ProjectService = {
     return mapProjectFromDb(data)
   },
 
-  async createProject(params: { title?: string } = {}) {
+  async createProject(params: { 
+    title?: string
+    previewKind?: 'video' | 'image'
+    sourceProfile?: SourceProfile
+    sourceAssetId?: string
+  } = {}) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -58,6 +63,9 @@ export const ProjectService = {
         user_id: user.id,
         title: params.title || 'Untitled project',
         status: 'draft',
+        preview_kind: params.previewKind,
+        source_profile: params.sourceProfile || {},
+        source_asset_id: params.sourceAssetId,
       })
       .select()
       .single()

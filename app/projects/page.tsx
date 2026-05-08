@@ -119,7 +119,7 @@ export default function ProjectsPage() {
                 <div>
                   <div className="text-lg font-medium text-white/94">Project Folders</div>
                   <div className="mt-1 text-xs text-white/56">
-                    Read-only mode: projects are managed in Xano and synced to this view.
+                    Manage your projects and edit history.
                   </div>
                 </div>
 
@@ -172,7 +172,7 @@ export default function ProjectsPage() {
                 </div>
               ) : isEmpty ? (
                 <div className="mt-4 rounded-2xl border border-white/12 bg-white/[0.03] px-4 py-10 text-center text-white/62">
-                  {isDataEmpty ? 'No projects found in Xano yet.' : 'No projects match this filter.'}
+                  {isDataEmpty ? 'No projects found. Create your first project in the Studio!' : 'No projects match this filter.'}
                 </div>
               ) : (
                 <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

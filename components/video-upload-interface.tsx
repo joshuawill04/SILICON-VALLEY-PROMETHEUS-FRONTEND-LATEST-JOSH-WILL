@@ -56,7 +56,7 @@ import {
     inspectSourceFile,
 } from "@/lib/media/source-profile";
 import { clearPendingEditorNavigation, getPendingEditorNavigation, markPendingEditorNavigation, rememberCurrentPathForEditorReturn } from "@/lib/editor-navigation";
-import { createProcessingJob, createProject, getActiveStyleId, getMostRecentProject, startProcessing as persistStartProcessing, setActiveStyleId as persistActiveStyleId } from "@/lib/mock";
+import { createProcessingJob, getActiveStyleId, getMostRecentProject, startProcessing as persistStartProcessing, setActiveStyleId as persistActiveStyleId } from "@/lib/mock";
 import { buildBillingHref, hasBillingAccess } from "@/lib/billing";
 import { setSessionSourcePreview } from "@/lib/source-preview-session";
 import type { SourceProfile } from "@/lib/types";
@@ -1500,12 +1500,22 @@ export function VideoUploadInterface() {
                 resolvedSourceProfile = settledSource.sourceProfile ?? resolvedSourceProfile;
             }
 
-            const project = createProject({
-                title: nextProjectTitle || "PROMETHEUS Project",
-                previewKind: resolvedPreviewKind ?? undefined,
-                sourceProfile: resolvedSourceProfile ?? undefined,
-                sourceAssetId: resolvedSourceAssetId ?? undefined,
+            const projectRes = await fetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: nextProjectTitle || "PROMETHEUS Project",
+                    previewKind: resolvedPreviewKind ?? undefined,
+                    sourceProfile: resolvedSourceProfile ?? undefined,
+                    sourceAssetId: resolvedSourceAssetId ?? undefined,
+                }),
             });
+
+            const { project, error: projectError } = await projectRes.json();
+            
+            if (projectError || !project) {
+                throw new Error(projectError || "Failed to create project");
+            }
 
             if (stagedSourceFile && (resolvedPreviewKind === "video" || resolvedPreviewKind === "image")) {
                 setSessionSourcePreview({

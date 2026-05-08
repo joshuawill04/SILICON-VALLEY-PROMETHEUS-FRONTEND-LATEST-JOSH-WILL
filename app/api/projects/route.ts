@@ -17,7 +17,12 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}))
-    const project = await ProjectService.createProject({ title: body.title })
+    const project = await ProjectService.createProject({ 
+      title: body.title,
+      previewKind: body.previewKind,
+      sourceProfile: body.sourceProfile,
+      sourceAssetId: body.sourceAssetId,
+    })
     return NextResponse.json({ project })
   } catch (err) {
     console.error('[api/projects] POST error:', err)
