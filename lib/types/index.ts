@@ -660,3 +660,29 @@ export interface AssetItem {
   sizeBytes?: number
   tags?: string[]
 }
+
+export type ProjectExportStatus = 'pending' | 'processing' | 'completed' | 'failed'
+
+export interface ProjectExport {
+  id: Id
+  projectId: Id
+  userId: Id
+  status: ProjectExportStatus
+  storageProvider: string
+  storageBucket?: string
+  storagePath?: string
+  mimeType?: string
+  fileSizeBytes?: number
+  durationMs?: number
+  width?: number
+  height?: number
+  fps?: number
+  preset: string
+  metadata: Record<string, any>
+  errorMessage?: string
+  startedAt?: string
+  completedAt?: string
+  failedAt?: string
+  createdAt: string
+  updatedAt: string
+}
