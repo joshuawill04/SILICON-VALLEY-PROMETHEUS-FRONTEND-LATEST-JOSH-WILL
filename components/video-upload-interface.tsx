@@ -1479,8 +1479,10 @@ export function VideoUploadInterface() {
         });
         await waitForNextPaint();
 
+        let currentStage = 'INIT';
         try {
             if (!resolvedSourceAssetId && stagedSourceFile) {
+                currentStage = 'AWAIT_SETTLED_SOURCE';
                 const settledSource = await awaitSettledSource();
                 if (!settledSource?.assetId) {
                     setEditorLaunchOverlay(null);
@@ -1502,6 +1504,7 @@ export function VideoUploadInterface() {
                 resolvedSourceProfile = settledSource.sourceProfile ?? resolvedSourceProfile;
             }
 
+            currentStage = 'PROJECT_CREATE';
             const projectRes = await fetch('/api/projects', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1509,9 +1512,6 @@ export function VideoUploadInterface() {
                     title: nextProjectTitle || "PROMETHEUS Project",
                     previewKind: resolvedPreviewKind ?? undefined,
                     sourceProfile: resolvedSourceProfile ?? undefined,
-                    // We omit sourceAssetId here because the real database expects a UUID
-                    // and a corresponding record in the source_assets table, which is
-                    // handled later in the R2 upload foundation.
                 }),
             });
 
@@ -1521,7 +1521,88 @@ export function VideoUploadInterface() {
                 throw new Error(projectError || "Failed to create project");
             }
 
+            // Phase 2B: Wire Upload UI to Cloudflare R2
+            let cloudAssetId = null;
+            if (stagedSourceFile) {
+                setEditorLaunchOverlay({
+                    title: launchProjectTitle,
+                    detail: "Preparing secure upload channel...",
+                });
+
+                // 1. Request presigned R2 upload URL
+                currentStage = 'R2_UPLOAD_URL';
+                const uploadUrlRes = await fetch(`/api/projects/${project.id}/upload-url`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: stagedSourceFile.name,
+                        mimeType: stagedSourceFile.type,
+                        sizeBytes: stagedSourceFile.size,
+                    }),
+                });
+
+                if (!uploadUrlRes.ok) {
+                    const errorData = await uploadUrlRes.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${uploadUrlRes.status} from upload-url`);
+                }
+
+                const { asset: uploadAsset, upload } = await uploadUrlRes.json();
+                cloudAssetId = uploadAsset.id;
+
+                setEditorLaunchOverlay({
+                    title: launchProjectTitle,
+                    detail: `Uploading ${stagedSourceFile.name} to Cloudflare R2...`,
+                });
+
+                // 2. Upload the actual source file to R2 using the returned PUT URL
+                currentStage = 'R2_PUT';
+                const uploadRes = await fetch(upload.url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': stagedSourceFile.type,
+                    },
+                    body: stagedSourceFile,
+                });
+
+                if (!uploadRes.ok) {
+                    throw new Error(`Failed to upload to R2: HTTP ${uploadRes.status}`);
+                }
+
+                setEditorLaunchOverlay({
+                    title: launchProjectTitle,
+                    detail: "Registering asset metadata...",
+                });
+
+                // 3. Register the uploaded asset metadata
+                currentStage = 'ASSET_REGISTER';
+                const assetRegisterRes = await fetch(`/api/projects/${project.id}/assets`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        assetId: uploadAsset.id,
+                        bucket: uploadAsset.bucket,
+                        objectKey: uploadAsset.objectKey,
+                        filename: stagedSourceFile.name,
+                        mimeType: stagedSourceFile.type,
+                        sizeBytes: stagedSourceFile.size,
+                        durationMs: resolvedSourceProfile?.inspection.durationSec ? Math.round(resolvedSourceProfile.inspection.durationSec * 1000) : undefined,
+                        width: resolvedSourceProfile?.inspection.width,
+                        height: resolvedSourceProfile?.inspection.height,
+                        profile: resolvedSourceProfile,
+                    }),
+                });
+
+                if (!assetRegisterRes.ok) {
+                    const errorData = await assetRegisterRes.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${assetRegisterRes.status} from asset registration`);
+                }
+
+                // Update local project object with the newly registered asset ID
+                project.sourceAssetId = uploadAsset.id;
+            }
+
             // Sync the REAL project from the API back to MOCK storage so the editor can see it
+            currentStage = 'SYNC_MOCK';
             upsertProject(project);
 
             if (stagedSourceFile && (resolvedPreviewKind === "video" || resolvedPreviewKind === "image")) {
@@ -1529,10 +1610,11 @@ export function VideoUploadInterface() {
                     projectId: project.id,
                     file: stagedSourceFile,
                     previewKind: resolvedPreviewKind,
-                    sourceAssetId: resolvedSourceAssetId,
+                    sourceAssetId: cloudAssetId || resolvedSourceAssetId,
                 });
             }
 
+            currentStage = 'CREATE_JOB';
             const nextJob = createProcessingJob({
                 projectId: project.id,
                 input: {
@@ -1565,10 +1647,15 @@ export function VideoUploadInterface() {
                     }
                 }, EDITOR_NAVIGATION_FALLBACK_DELAY_MS);
             }
+            currentStage = 'EDITOR_NAVIGATION';
             React.startTransition(() => {
                 router.push(editorRoute);
             });
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(`[UploadFailure] Stage: ${currentStage}, Error:`, error);
+            toast.error(`Failed at ${currentStage}: ${errorMessage}`);
+
             setEditorLaunchOverlay(null);
             submitLockRef.current = false;
             clearPendingEditorNavigation();
@@ -1579,9 +1666,6 @@ export function VideoUploadInterface() {
             if (launchNavigationTimerRef.current !== null) {
                 window.clearTimeout(launchNavigationTimerRef.current);
                 launchNavigationTimerRef.current = null;
-            }
-            if (process.env.NODE_ENV === "development") {
-                console.warn("Failed to launch editor from the upload composer.", error);
             }
             return false;
         }
