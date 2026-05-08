@@ -7,14 +7,16 @@ import { BillingRequiredDialog } from '@/components/billing/billing-required-dia
 import { EditorLoadingScreen } from '@/components/editor/editor-loading-screen'
 import { buildBillingHref, hasBillingAccess } from '@/lib/billing'
 
+const DISABLE_EDITOR_BILLING_GATE = process.env.NEXT_PUBLIC_DISABLE_EDITOR_BILLING_GATE === 'true'
+
 export default function EditorLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [billingResolved, setBillingResolved] = React.useState(false)
   const [billingAllowed, setBillingAllowed] = React.useState(false)
 
   React.useEffect(() => {
-    // const allowed = hasBillingAccess() // Original line
-    setBillingAllowed(true) // Always allow access for prototype stage
+    const allowed = DISABLE_EDITOR_BILLING_GATE || hasBillingAccess()
+    setBillingAllowed(allowed)
     setBillingResolved(true)
   }, [])
 
