@@ -27,6 +27,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Volume2,
+  VolumeX,
   Wand2,
   X,
 } from 'lucide-react'
@@ -169,6 +170,7 @@ type MusicApiResponse = MusicRecommendationPipelineResult & {
 
 const MUSIC_PREFERENCE_STORAGE_PREFIX = 'prometheus.editor.music-preferences.v1'
 const STAGED_MUSIC_STORAGE_PREFIX = 'prometheus.editor.staged-music.v1'
+const CHAT_ENTRIES_STORAGE_PREFIX = 'prometheus.editor.chat-entries.v1'
 const MUSIC_PREVIEW_VOLUME_STORAGE_PREFIX = 'prometheus.editor.music-preview-volume.v1'
 const SELECTED_EDITOR_MUSIC_STORAGE_PREFIX = 'prometheus.editor.selected-track.v1'
 const DEFAULT_MUSIC_PREVIEW_VOLUME = 0.34
@@ -221,6 +223,10 @@ const EDIT_INTENT_KEYWORDS = [
   'polish',
   'clean up',
 ] as const
+
+function chatEntriesStorageKey(projectId: string) {
+  return `${CHAT_ENTRIES_STORAGE_PREFIX}.${projectId}`
+}
 
 function musicPreferenceStorageKey(projectId: string) {
   return `${MUSIC_PREFERENCE_STORAGE_PREFIX}.${projectId}`
@@ -1782,6 +1788,8 @@ const ChatWorkspacePanel = React.memo(function ChatWorkspacePanel({
   automationRequest,
   musicSpotlightPortalTarget,
   onEditRequest,
+  initialEditorState,
+  onSave,
 }: {
   projectId: string
   projectTitle: string
@@ -1792,6 +1800,8 @@ const ChatWorkspacePanel = React.memo(function ChatWorkspacePanel({
   automationRequest?: ComposerAutomationRequest | null
   musicSpotlightPortalTarget?: HTMLDivElement | null
   onEditRequest?: (request: { prompt: string; styleTemplate: StyleTemplate }) => void | Promise<void>
+  initialEditorState?: any
+  onSave?: (editorState: any) => void
 }) {
   const reduceMotion = useStableReducedMotion()
   const [entries, setEntries] = React.useState<ChatEntry[]>(() => [])
@@ -1931,11 +1941,13 @@ const ChatWorkspacePanel = React.memo(function ChatWorkspacePanel({
   React.useEffect(() => {
     if (!projectId) return
 
-    const savedPreference = readLocalStorageJSON<MusicPreference>(musicPreferenceStorageKey(projectId))
-    const savedQueue = readLocalStorageJSON<StagedMusicTrack[]>(stagedMusicStorageKey(projectId))
+    const savedEntries = initialEditorState?.entries || readLocalStorageJSON<ChatEntry[]>(chatEntriesStorageKey(projectId)) || []
+    const savedPreference = initialEditorState?.musicPreference || readLocalStorageJSON<MusicPreference>(musicPreferenceStorageKey(projectId))
+    const savedQueue = initialEditorState?.stagedTracks || readLocalStorageJSON<StagedMusicTrack[]>(stagedMusicStorageKey(projectId))
     const savedPreviewVolume = readLocalStorageJSON<number>(musicPreviewVolumeStorageKey(projectId))
     const nextPreference = normalizeMusicPreference(savedPreference, initialPrompt)
 
+    setEntries(savedEntries)
     setMusicPreference(nextPreference)
     setStagedTracks(Array.isArray(savedQueue) ? savedQueue : [])
     const nextPreviewVolume = clampMusicPreviewVolume(
@@ -1944,12 +1956,31 @@ const ChatWorkspacePanel = React.memo(function ChatWorkspacePanel({
     musicPreviewVolumeRef.current = nextPreviewVolume
     setMusicPreviewVolume(nextPreviewVolume)
     setMusicStorageReady(true)
-  }, [initialPrompt, projectId])
+  }, [initialPrompt, projectId, initialEditorState])
 
   React.useEffect(() => {
     if (!musicStorageReady) return
     writeLocalStorageJSON(musicPreferenceStorageKey(projectId), musicPreference)
   }, [musicPreference, musicStorageReady, projectId])
+
+  React.useEffect(() => {
+    if (!musicStorageReady) return
+    writeLocalStorageJSON(chatEntriesStorageKey(projectId), entries)
+  }, [entries, musicStorageReady, projectId])
+
+  React.useEffect(() => {
+    if (!musicStorageReady || !onSave) return
+
+    const timeoutId = window.setTimeout(() => {
+      onSave({
+        entries,
+        musicPreference,
+        stagedTracks,
+      })
+    }, 1500)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [entries, musicPreference, stagedTracks, musicStorageReady, onSave])
 
   React.useEffect(() => {
     if (!musicStorageReady) return
@@ -3252,6 +3283,7 @@ export default function EditorPage() {
 
   const [project, setProject] = React.useState<Project | null>(null)
   const [job, setJob] = React.useState<ProcessingJob | null>(null)
+  const [saveStatus, setSaveStatus] = React.useState<'saved' | 'saving' | 'error'>('saved')
   const [isEditorBootReady, setIsEditorBootReady] = React.useState(false)
   const [leftTab, setLeftTab] = React.useState<LeftTabKey>('chat')
   const [fitMode, setFitMode] = React.useState<PreviewFitMode>('fill')
@@ -3267,6 +3299,7 @@ export default function EditorPage() {
   const [sourceAssetLabel, setSourceAssetLabel] = React.useState<string | null>(null)
   const [isPreviewMediaReady, setIsPreviewMediaReady] = React.useState(false)
   const [isPreviewLoadingVisible, setIsPreviewLoadingVisible] = React.useState(false)
+  const [isPreviewMuted, setIsPreviewMuted] = React.useState(true)
   const [isInlineSourceDragOver, setIsInlineSourceDragOver] = React.useState(false)
   const [previewFramePreset, setPreviewFramePreset] = React.useState<PreviewFramePreset>('source')
   const [bottomMode, setBottomMode] = React.useState<BottomMode>('Original')
@@ -3341,6 +3374,26 @@ export default function EditorPage() {
   }, [projectId])
 
   React.useEffect(() => {
+    let active = true
+    const fetchProject = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}`)
+        if (res.ok) {
+          const { project: apiProject } = await res.json()
+          if (active && apiProject) {
+            setProject(apiProject)
+            upsertProject(apiProject)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch project from API:', err)
+      }
+    }
+    fetchProject()
+    return () => { active = false }
+  }, [projectId])
+
+  React.useEffect(() => {
     const savedTrackId = readLocalStorageJSON<string | null>(selectedEditorMusicStorageKey(projectId))
     setSelectedEditorMusicTrackId(typeof savedTrackId === 'string' ? savedTrackId : null)
   }, [projectId])
@@ -3404,33 +3457,69 @@ export default function EditorPage() {
 
     setPersistedPreviewUrl(null)
 
-    if (!project?.sourceAssetId) return
+    const recoverPersistedSource = async () => {
+      if (!project?.sourceAssetId) return
 
-    void createSourceAssetObjectUrl(project.sourceAssetId)
-      .then((resolvedUrl) => {
+      try {
+        const localUrl = await createSourceAssetObjectUrl(project.sourceAssetId)
+        
         if (!active) {
-          if (resolvedUrl) {
-            URL.revokeObjectURL(resolvedUrl)
-          }
+          if (localUrl) URL.revokeObjectURL(localUrl)
           return
         }
 
-        nextObjectUrl = resolvedUrl
-        debugEditorPreview('restored-persisted-preview-url', {
+        if (localUrl) {
+          nextObjectUrl = localUrl
+          debugEditorPreview('restored-local-preview-url', {
+            projectId,
+            sourceAssetId: project.sourceAssetId,
+            localUrl,
+          })
+          setPersistedPreviewUrl(localUrl)
+          return
+        }
+
+        // Local recovery failed, try cloud recovery
+        debugEditorPreview('local-recovery-failed-trying-cloud', {
           projectId,
           sourceAssetId: project.sourceAssetId,
-          resolvedUrl,
         })
-        setPersistedPreviewUrl(resolvedUrl)
-      })
-      .catch(() => {
+
+        const res = await fetch(`/api/projects/${projectId}/assets`)
+        if (!res.ok) throw new Error('Cloud recovery failed')
+
+        const data = await res.json()
+        const cloudUrl = data.source?.url
+
         if (!active) return
-        debugEditorPreview('restore-persisted-preview-failed', {
+
+        if (cloudUrl) {
+          debugEditorPreview('restored-cloud-preview-url', {
+            projectId,
+            sourceAssetId: project.sourceAssetId,
+            cloudUrl,
+          })
+          setPersistedPreviewUrl(cloudUrl)
+        } else {
+          throw new Error('No cloud URL returned')
+        }
+      } catch (err) {
+        if (!active) return
+        console.error('Source recovery failed:', err)
+        debugEditorPreview('source-recovery-failed', {
           projectId,
           sourceAssetId: project.sourceAssetId,
+          error: err instanceof Error ? err.message : String(err),
         })
         setPersistedPreviewUrl(null)
-      })
+        // If we have an asset ID but can't find it locally or in the cloud, it's an error
+        if (project?.sourceAssetId) {
+          setIsPreviewMediaReady(false) // Force stop loading
+        }
+      }
+    }
+
+    void recoverPersistedSource()
 
     return () => {
       active = false
@@ -3715,6 +3804,38 @@ export default function EditorPage() {
     }
   }, [])
 
+  const handleAutoSave = React.useCallback(async (editorState: any) => {
+    setSaveStatus('saving')
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ editorState }),
+      })
+      if (!res.ok) throw new Error('Failed to save')
+      setSaveStatus('saved')
+    } catch (err) {
+      console.error('Auto-save failed:', err)
+      setSaveStatus('error')
+    }
+  }, [projectId])
+
+  const handleAutoSaveAnimationPlan = React.useCallback(async (animationPlan: AnimationPlan) => {
+    setSaveStatus('saving')
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ animationPlan }),
+      })
+      if (!res.ok) throw new Error('Failed to save')
+      setSaveStatus('saved')
+    } catch (err) {
+      console.error('Auto-save animation plan failed:', err)
+      setSaveStatus('error')
+    }
+  }, [projectId])
+
   const handleEditorMusicTrackSelect = React.useCallback((track: MusicRecommendation) => {
     setSelectedEditorMusicTrackId(track.id)
   }, [])
@@ -3737,7 +3858,8 @@ export default function EditorPage() {
     if (updatedJob) {
       setJob(updatedJob)
     }
-  }, [cinematicRegistry, job, previewOverlayPlan, projectId])
+    void handleAutoSaveAnimationPlan(nextPlan)
+  }, [cinematicRegistry, job, previewOverlayPlan, projectId, handleAutoSaveAnimationPlan])
 
   const currentSplitPreviewAssets =
     viralClipSplitPreviewAssets.sourceAssetId === (project?.sourceAssetId ?? null)
@@ -4403,6 +4525,8 @@ export default function EditorPage() {
             composerPortalTarget={showViralClipSplitPreview || activeWorkspaceTab === 'Music' ? null : chatComposerPortal}
             musicSpotlightPortalTarget={isDeferredChromeReady ? musicSpotlightPortalTarget : null}
             onEditRequest={handleEditRequest}
+            initialEditorState={project?.editorState}
+            onSave={handleAutoSave}
           />
         )
     }
@@ -4471,9 +4595,16 @@ export default function EditorPage() {
                   className="editor-display truncate text-[1.45rem] leading-tight text-white"
                 />
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-white/42">
-                  <span className="inline-flex items-center gap-2">
-                    <CheckCircle2 className="size-3.5" />
-                    All changes saved
+                  <span className={cn(
+                    "inline-flex items-center gap-2 transition-colors",
+                    saveStatus === 'saving' ? "text-white/60" : saveStatus === 'error' ? "text-rose-400" : "text-white/42"
+                  )}>
+                    {saveStatus === 'saving' ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="size-3.5" />
+                    )}
+                    {saveStatus === 'saving' ? 'Saving changes...' : saveStatus === 'error' ? 'Error saving' : 'All changes saved'}
                   </span>
                   <span>{progressPercent}% staged</span>
                 </div>
@@ -4749,7 +4880,7 @@ export default function EditorPage() {
                                         key={previewUrl}
                                         ref={previewVideoRef}
                                         src={previewUrl}
-                                        muted
+                                        muted={isPreviewMuted}
                                         playsInline
                                         controls={false}
                                         preload="auto"
@@ -4889,9 +5020,23 @@ export default function EditorPage() {
 
                     <button
                       type="button"
-                      className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-white/54 transition-colors hover:text-white/82"
+                      onClick={() => setIsPreviewMuted((prev) => !prev)}
+                      title={isPreviewMuted ? 'Unmute' : 'Mute'}
+                      aria-label={
+                        project?.sourceProfile?.inspection.hasAudio === false
+                          ? `${isPreviewMuted ? 'Unmute' : 'Mute'} (Source detected as silent)`
+                          : isPreviewMuted
+                            ? 'Unmute source'
+                            : 'Mute source'
+                      }
+                      className={cn(
+                        'grid size-9 place-items-center rounded-full border transition-colors',
+                        isPreviewMuted
+                          ? 'border-white/8 bg-white/[0.02] text-white/44 hover:text-white/64'
+                          : 'border-white/14 bg-white/[0.06] text-white/82 hover:text-white',
+                      )}
                     >
-                      <Volume2 className="size-4" />
+                      {isPreviewMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
                     </button>
                   </div>
 
