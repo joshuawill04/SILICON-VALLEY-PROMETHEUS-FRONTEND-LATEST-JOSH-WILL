@@ -1538,6 +1538,7 @@ export function VideoUploadInterface() {
                         filename: stagedSourceFile.name,
                         mimeType: stagedSourceFile.type,
                         sizeBytes: stagedSourceFile.size,
+                        assetId: stagedSourceAssetId,
                     }),
                 });
 

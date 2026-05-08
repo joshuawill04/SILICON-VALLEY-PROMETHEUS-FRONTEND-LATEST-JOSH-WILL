@@ -11,7 +11,7 @@ export async function POST(
   try {
     const { id: projectId } = await params
     const body = await req.json().catch(() => ({}))
-    const { filename, mimeType, sizeBytes } = body
+    const { filename, mimeType, sizeBytes, assetId: providedAssetId } = body
 
     if (!filename || !mimeType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -30,7 +30,12 @@ export async function POST(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    const assetId = crypto.randomUUID()
+    // Use provided assetId if it's a valid UUID, otherwise generate a new one
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    const assetId = providedAssetId && uuidRegex.test(providedAssetId) 
+      ? providedAssetId 
+      : crypto.randomUUID()
+
     const bucket = process.env.R2_BUCKET_SOURCES || 'prometheus-sources'
     const objectKey = R2Keys.sourceAsset(user.id, projectId, assetId, filename)
 
