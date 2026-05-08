@@ -56,7 +56,7 @@ import {
     inspectSourceFile,
 } from "@/lib/media/source-profile";
 import { clearPendingEditorNavigation, getPendingEditorNavigation, markPendingEditorNavigation, rememberCurrentPathForEditorReturn } from "@/lib/editor-navigation";
-import { createProcessingJob, getActiveStyleId, getMostRecentProject, startProcessing as persistStartProcessing, setActiveStyleId as persistActiveStyleId } from "@/lib/mock";
+import { createProcessingJob, getActiveStyleId, getMostRecentProject, startProcessing as persistStartProcessing, setActiveStyleId as persistActiveStyleId, upsertProject } from "@/lib/mock";
 import { buildBillingHref, hasBillingAccess } from "@/lib/billing";
 import { setSessionSourcePreview } from "@/lib/source-preview-session";
 import type { SourceProfile } from "@/lib/types";
@@ -83,6 +83,7 @@ type AirtableImageArchiveResponse = {
 const AIRTABLE_STYLE_PREVIEWS_SESSION_KEY = "prometheus.airtable-style-previews.v1";
 const EDITOR_NAVIGATION_FALLBACK_DELAY_MS = 6000;
 const SHOULD_USE_EDITOR_NAVIGATION_FALLBACK = process.env.NODE_ENV === "production";
+const DISABLE_EDITOR_BILLING_GATE = process.env.NEXT_PUBLIC_DISABLE_EDITOR_BILLING_GATE === "true";
 
 function waitForNextPaint() {
     if (typeof window === "undefined") {
@@ -1431,7 +1432,8 @@ export function VideoUploadInterface() {
 
     const handleComposerSubmit = useCallback(async (payload: PromptComposerSubmitPayload) => {
         if (submitLockRef.current) return false;
-        if (!hasBillingAccess()) {
+        
+        if (!DISABLE_EDITOR_BILLING_GATE && !hasBillingAccess()) {
             setBillingGateOpen(true);
             return false;
         }
@@ -1507,7 +1509,9 @@ export function VideoUploadInterface() {
                     title: nextProjectTitle || "PROMETHEUS Project",
                     previewKind: resolvedPreviewKind ?? undefined,
                     sourceProfile: resolvedSourceProfile ?? undefined,
-                    sourceAssetId: resolvedSourceAssetId ?? undefined,
+                    // We omit sourceAssetId here because the real database expects a UUID
+                    // and a corresponding record in the source_assets table, which is
+                    // handled later in the R2 upload foundation.
                 }),
             });
 
@@ -1516,6 +1520,9 @@ export function VideoUploadInterface() {
             if (projectError || !project) {
                 throw new Error(projectError || "Failed to create project");
             }
+
+            // Sync the REAL project from the API back to MOCK storage so the editor can see it
+            upsertProject(project);
 
             if (stagedSourceFile && (resolvedPreviewKind === "video" || resolvedPreviewKind === "image")) {
                 setSessionSourcePreview({

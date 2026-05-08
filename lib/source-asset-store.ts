@@ -15,6 +15,9 @@ function isBrowser() {
 }
 
 function createAssetId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
   return `asset_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`
 }
 
