@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, Check, ChevronDown, Download, Link2, Plus } from 'lucide-react'
+import { ArrowUpRight, Check, ChevronDown, Download, Link2, Plus, Sparkles } from 'lucide-react'
 
 import { useStableReducedMotion } from '@/hooks/use-stable-reduced-motion'
 import { cn } from '@/lib/utils'
@@ -405,15 +405,17 @@ export function CinematicExportCluster({ className, onExport }: CinematicExportC
         <motion.button
           type="button"
           onClick={onExport}
-          className="relative z-10 inline-flex h-12 min-w-[8.5rem] items-center justify-between gap-3 rounded-full pl-3.5 pr-4 text-[15px] font-medium tracking-[-0.015em] text-[#16131a] transition-[color,transform] duration-300 hover:translate-x-[1px] hover:text-black focus-visible:outline-none"
+          aria-label="Export pipeline coming next"
+          title="Export will be available once render jobs are enabled"
+          className="relative z-10 inline-flex h-12 min-w-[3rem] sm:min-w-[8.5rem] items-center justify-center sm:justify-between gap-2 sm:gap-3 rounded-full px-3 sm:pl-3.5 sm:pr-4 text-[15px] font-medium tracking-[-0.015em] text-[#16131a] transition-[color,transform] duration-300 hover:translate-x-[1px] hover:text-black focus-visible:outline-none"
           whileHover={prefersReducedMotion ? undefined : { x: 1 }}
           whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
         >
           <span className="inline-flex items-center gap-2.5">
-            <Download className="size-[15px]" />
-            <span>Export</span>
+            <Sparkles className="size-[15px]" />
+            <span className="hidden sm:inline">Prepare Export</span>
           </span>
-          <ChevronDown className="size-[15px] text-[#5e5854]" />
+          <ChevronDown className="hidden sm:block size-[15px] text-[#5e5854]" />
         </motion.button>
       </div>
 
