@@ -3614,7 +3614,6 @@ export default function EditorPage() {
     if (!SHOULD_PREFETCH_EDITOR_SUPPORT_ROUTES) return
 
     void router.prefetch('/projects')
-    void router.prefetch(`/exports/${projectId}`)
   }, [projectId, router])
 
   const handleBackNavigation = React.useCallback(() => {
@@ -4633,7 +4632,12 @@ export default function EditorPage() {
                 viewport={{ once: false, amount: 0.45 }}
               >
                 {isDeferredChromeReady ? (
-                  <CinematicExportCluster onExport={() => router.push(`/exports/${projectId}`)} />
+                  <CinematicExportCluster onExport={() => {
+                    toast.success('Export pipeline coming next', {
+                      description: 'Your project is saved and ready. Exports will be available once render jobs are enabled.',
+                      duration: 5000,
+                    })
+                  }} />
                 ) : (
                   <div className="h-[52px] w-[220px] rounded-full border border-white/8 bg-white/[0.03]" />
                 )}
