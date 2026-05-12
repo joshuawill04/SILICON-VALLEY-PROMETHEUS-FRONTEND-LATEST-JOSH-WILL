@@ -134,7 +134,7 @@ export function DashboardSidebar() {
       className="relative isolate z-20 hidden h-screen shrink-0 pl-4 pr-0 py-5 lg:flex lg:flex-col transform-gpu"
     >
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,rgba(219,194,255,0.10)_0%,rgba(219,194,255,0.03)_28%,transparent_42%),radial-gradient(circle_at_100%_42%,rgba(126,94,210,0.16)_0%,rgba(126,94,210,0.07)_22%,transparent_40%),linear-gradient(180deg,rgba(22,16,34,0.90)_0%,rgba(15,10,25,0.95)_100%)] backdrop-blur-xl"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,rgba(219,194,255,0.08)_0%,rgba(219,194,255,0.02)_28%,transparent_42%),radial-gradient(circle_at_100%_42%,rgba(126,94,210,0.12)_0%,rgba(126,94,210,0.05)_22%,transparent_40%),linear-gradient(180deg,rgba(16,12,28,0.92)_0%,rgba(12,8,22,0.96)_100%)] backdrop-blur-2xl"
       />
       <button
         type="button"
@@ -143,7 +143,7 @@ export function DashboardSidebar() {
           setCollapsed((current) => !current)
           setHoveredHref(null)
         }}
-        className="absolute right-[-17px] top-9 z-20 flex size-9 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(21,15,33,0.96)_0%,rgba(10,7,18,0.98)_100%)] text-white/72 shadow-[0_18px_36px_-24px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] transition-[transform,color,border-color] duration-200 hover:scale-[1.03] hover:border-white/18 hover:text-white/92"
+        className="absolute right-[-17px] top-9 z-20 flex size-9 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(21,15,33,0.98)_0%,rgba(10,7,18,1)_100%)] text-white/60 shadow-[0_18px_36px_-24px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:scale-[1.05] hover:border-white/20 hover:text-white/92 active:scale-[0.95]"
       >
         {collapsed ? <ChevronsRight className="size-4" /> : <ChevronsLeft className="size-4" />}
       </button>
@@ -157,7 +157,7 @@ export function DashboardSidebar() {
             scale: 1,
           }}
           className={cn(
-            'overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transform-gpu',
+            'overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transform-gpu',
             collapsed ? 'px-0 py-0' : 'px-5 py-4',
           )}
         >
@@ -376,26 +376,22 @@ function ActiveBlade({ top, height, transition }: ActiveBladeProps) {
       initial={false}
       animate={{ top, height }}
       transition={transition}
-      className="pointer-events-none absolute left-2 right-[-4px] z-[1] overflow-visible rounded-l-[20px] shadow-[0_24px_44px_-34px_rgba(0,0,0,0.95),0_12px_26px_-22px_rgba(83,61,142,0.54)]"
+      className="pointer-events-none absolute left-2 right-[-2px] z-[1] overflow-visible rounded-l-[22px] shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8),0_0_1px_rgba(255,255,255,0.08)]"
     >
       <div
-        className="absolute inset-0 rounded-l-[20px] ring-1 ring-white/[0.05]"
-        style={{ backgroundColor: ACTIVE_CUTOUT_COLOR }}
+        className="absolute inset-0 rounded-l-[22px]"
+        style={{ backgroundColor: '#0a0a0f' }}
       />
-      <div className="absolute inset-[1px] rounded-l-[19px] bg-[linear-gradient(180deg,rgba(19,15,29,0.98)_0%,rgba(10,8,16,0.98)_100%)]" />
-      <div className="absolute inset-x-4 top-1.5 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)]" />
+      <div className="absolute inset-[1px] rounded-l-[21px] bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.01)_100%)]" />
+      <div className="absolute inset-x-4 top-[1px] h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)]" />
       <div
         className="absolute right-0 top-[-24px] h-6 w-6 rounded-br-[24px]"
-        style={{ boxShadow: `8px 8px 0 8px ${ACTIVE_CUTOUT_COLOR}` }}
-      >
-        <div className="absolute inset-0 rounded-br-[24px] bg-transparent" />
-      </div>
+        style={{ boxShadow: `8px 8px 0 8px #0a0a0f` }}
+      />
       <div
         className="absolute bottom-[-24px] right-0 h-6 w-6 rounded-tr-[24px]"
-        style={{ boxShadow: `8px -8px 0 8px ${ACTIVE_CUTOUT_COLOR}` }}
-      >
-        <div className="absolute inset-0 rounded-tr-[24px] bg-transparent" />
-      </div>
+        style={{ boxShadow: `8px -8px 0 8px #0a0a0f` }}
+      />
     </motion.div>
   )
 }
@@ -414,9 +410,10 @@ const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(function NavItem(
         aria-current={isCurrent ? 'page' : undefined}
         title={collapsed ? item.label : undefined}
       className={cn(
-        'group relative z-10 flex h-12 items-center rounded-[20px] text-sm font-medium transition-[color,transform,opacity,padding] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b132c]',
-        collapsed ? 'justify-center px-0' : 'gap-3 px-4 pr-5',
-        isSelected ? 'text-white/92' : 'text-white/66 hover:text-white/92',
+        'group relative z-10 flex h-11 items-center rounded-[18px] text-[13px] font-medium transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20',
+        collapsed ? 'justify-center px-0' : 'gap-3 px-4',
+        isSelected ? 'text-white/95' : 'text-white/50 hover:text-white/85',
+        isSelected && !collapsed && 'translate-x-[2px]',
         className,
       )}
       onMouseEnter={onMouseEnter}
@@ -426,13 +423,13 @@ const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(function NavItem(
     >
       <span
         className={cn(
-          'flex size-9 shrink-0 items-center justify-center rounded-full border transition-[color,background-color,border-color,box-shadow] duration-300',
+          'flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300',
           isSelected
-            ? 'border-white/10 bg-white/[0.05] text-white/86 shadow-none'
-            : 'border-white/8 bg-white/[0.03] text-white/58 group-hover:border-white/14 group-hover:bg-white/[0.06] group-hover:text-white/82',
+            ? 'border-white/15 bg-white/[0.08] text-white shadow-[0_0_12px_rgba(255,255,255,0.06)]'
+            : 'border-white/5 bg-white/[0.02] text-white/50 group-hover:border-white/15 group-hover:bg-white/[0.06] group-hover:text-white/80',
         )}
       >
-        <Icon className="size-[17px]" />
+        <Icon className="size-[15px]" />
       </span>
 
       <AnimatePresence initial={false} mode="popLayout">
@@ -442,8 +439,8 @@ const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(function NavItem(
             initial={{ opacity: 0, x: -4 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -4 }}
-            transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
-            className="truncate tracking-[0.01em]"
+            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+            className="truncate tracking-tight"
           >
             {item.label}
           </motion.span>
@@ -457,10 +454,10 @@ const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(function NavItem(
             initial={{ opacity: 0, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.7 }}
-            transition={{ duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
             className={cn(
-              'ml-auto size-1.5 rounded-full transition-[background-color,box-shadow] duration-300',
-              isSelected || isCurrent ? 'bg-white/50 shadow-none' : 'bg-white/0 group-hover:bg-white/20',
+              'ml-auto size-1 rounded-full transition-all duration-300',
+              isSelected || isCurrent ? 'bg-white/60' : 'bg-white/0 group-hover:bg-white/20',
             )}
           />
         ) : null}

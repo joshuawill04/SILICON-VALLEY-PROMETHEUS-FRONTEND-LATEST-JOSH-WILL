@@ -7,7 +7,7 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card"
       className={cn(
-        'rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm text-white/90 shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset]',
+        'rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-[16px] text-white/90 shadow-[0_8px_32px_-16px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-all duration-300',
         className,
       )}
       {...props}
@@ -19,7 +19,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-header"
-      className={cn('flex flex-col gap-1.5 p-5', className)}
+      className={cn('flex flex-col gap-2 p-6', className)}
       {...props}
     />
   )
@@ -29,7 +29,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'h3'>) {
   return (
     <h3
       data-slot="card-title"
-      className={cn('font-semibold leading-none tracking-tight', className)}
+      className={cn('text-[17px] font-semibold leading-tight tracking-tight', className)}
       {...props}
     />
   )
@@ -39,7 +39,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<'p'>) {
   return (
     <p
       data-slot="card-description"
-      className={cn('text-sm text-white/60', className)}
+      className={cn('text-[13px] leading-relaxed text-white/45', className)}
       {...props}
     />
   )
@@ -47,7 +47,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<'p'>) {
 
 function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <div data-slot="card-content" className={cn('p-5 pt-0', className)} {...props} />
+    <div data-slot="card-content" className={cn('p-6 pt-0', className)} {...props} />
   )
 }
 
@@ -55,7 +55,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-footer"
-      className={cn('flex items-center p-5 pt-0', className)}
+      className={cn('flex items-center p-6 pt-0', className)}
       {...props}
     />
   )

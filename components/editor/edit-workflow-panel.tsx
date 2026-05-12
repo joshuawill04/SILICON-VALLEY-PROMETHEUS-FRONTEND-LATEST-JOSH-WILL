@@ -63,20 +63,20 @@ export function EditWorkflowPanel({ projectTitle, sourceLabel, job }: EditWorkfl
 
   return (
     <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: 10, filter: 'blur(8px)' }}
+      initial={reduceMotion ? false : { opacity: 0, y: 12, filter: 'blur(10px)' }}
       animate={reduceMotion ? undefined : { opacity: 1, y: 0, filter: 'blur(0px)' }}
-      transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-[18px] border border-white/8 bg-white/[0.02] p-4"
+      transition={{ duration: reduceMotion ? 0 : 0.32, ease: [0.23, 1, 0.32, 1] }}
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/5 bg-white/[0.02] p-4 backdrop-blur-[16px]"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.32em] text-white/35">Edit</div>
-          <div className="mt-2 text-sm leading-6 text-white/72">
-            This lane starts as soon as a prompt says to edit the imported video.
+          <div className="text-[10px] uppercase tracking-[0.32em] text-white/30">Edit Engine</div>
+          <div className="mt-2 text-sm leading-6 text-white/70">
+            Intelligent timeline orchestration based on your prompt intent.
           </div>
-          <div className="mt-2 text-[11px] uppercase tracking-[0.22em] text-white/42">{projectTitle}</div>
+          <div className="mt-2 text-[11px] font-medium tracking-tight text-white/40">{projectTitle}</div>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] text-white/66">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-1.5 text-[11px] font-medium text-white/70">
           {job?.status === 'running' ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
           <span>{statusText}</span>
         </div>
@@ -85,19 +85,19 @@ export function EditWorkflowPanel({ projectTitle, sourceLabel, job }: EditWorkfl
       <div className="mt-4 space-y-3 overflow-y-auto pr-1">
         {job ? (
           <>
-            <div className="rounded-[16px] border border-white/8 bg-black/18 p-3">
+            <div className="rounded-[18px] border border-white/8 bg-white/[0.04] p-3.5 shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] text-white/56">
+                <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-medium text-white/50">
                   Job {abbreviateJobId(job.id)}
                 </div>
                 <div
                   className={cn(
-                    'rounded-full border px-3 py-1 text-[11px]',
+                    'rounded-full border px-3 py-1 text-[11px] font-medium transition-colors',
                     job.status === 'running'
-                      ? 'border-emerald-300/18 bg-emerald-300/10 text-emerald-50'
+                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-100'
                       : job.status === 'completed'
-                        ? 'border-sky-300/18 bg-sky-300/10 text-sky-50'
-                        : 'border-white/10 bg-white/[0.04] text-white/56',
+                        ? 'border-sky-500/20 bg-sky-500/10 text-sky-100'
+                        : 'border-white/10 bg-white/[0.05] text-white/50',
                   )}
                 >
                   {job.status}

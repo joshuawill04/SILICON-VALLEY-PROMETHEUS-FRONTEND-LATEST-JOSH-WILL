@@ -841,10 +841,10 @@ const PromptComposer = React.memo(function PromptComposer({
     return (
         <div className="space-y-4">
             <motion.div
-                className="relative rounded-[22px] border border-white/12 bg-[linear-gradient(165deg,rgba(24,15,37,0.78)_0%,rgba(10,8,16,0.9)_55%,rgba(8,7,12,0.92)_100%)] shadow-[0_40px_95px_-45px_rgba(194,149,255,0.55)] backdrop-blur-2xl"
-                initial={{ scale: 0.98 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1 }}
+                className="relative rounded-[24px] border border-white/10 bg-white/[0.03] shadow-[0_32px_64px_-32px_rgba(168,124,255,0.3),inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-[24px]"
+                initial={{ scale: 0.98, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
             >
                 <AnimatePresence>
                     {showCommandPalette && (
@@ -1061,14 +1061,13 @@ const PromptComposer = React.memo(function PromptComposer({
                         className={cn(
                             "min-h-[60px] w-full resize-none px-4 py-3",
                             "border-none bg-transparent",
-                            "text-[15px] font-normal leading-7 tracking-[0.008em] text-white",
+                            "text-[15px] font-normal leading-7 tracking-tight text-white/90",
                             "focus:outline-none",
-                            "placeholder:text-white/30"
+                            "placeholder:text-white/25"
                         )}
                         style={{
                             overflow: "hidden",
-                            fontFamily:
-                                '"SF Pro Text","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",sans-serif',
+                            fontFamily: 'var(--font-sans)',
                         }}
                         showRing={false}
                     />

@@ -100,6 +100,7 @@ import type {
   ViralClipTargetPlatform,
   CinematicAssetRegistry,
 } from '@/lib/types'
+import { ChatWorkspacePanel, type ComposerAutomationRequest } from '@/components/editor/chat-workspace-panel'
 import { SourceStagePlaceholder } from '@/components/editor/source-stage-placeholder'
 
 type LeftTabKey = 'chat' | 'edit' | 'design' | 'assets'
@@ -130,151 +131,6 @@ const EMPTY_SPLIT_PREVIEW_ASSETS: SplitPreviewAssetState = {
 }
 
 const PREVIEW_FRAME_PRESETS: PreviewFramePreset[] = ['source', '9:16', '1:1', '4:5', '16:9']
-
-type ChatEntry = {
-  id: string
-  role: 'assistant' | 'user'
-  text: string
-  status?: 'loading' | 'ready'
-  music?: ChatMusicBlock
-}
-
-type ChatMusicBlock = MusicRecommendationPipelineResult & {
-  status: 'loading' | 'ready'
-  query: string
-  preference: MusicPreference
-  contextSummary?: string
-  profileModel?: string
-}
-
-type ChatApiResponse = {
-  reply?: string
-  error?: string
-}
-
-type ComposerAutomationRequest = {
-  id: number
-  prompt: string
-}
-
-type MusicApiResponse = MusicRecommendationPipelineResult & {
-  error?: string
-  contextSummary?: string
-  profileModel?: string
-}
-
-const MUSIC_PREFERENCE_STORAGE_PREFIX = 'prometheus.editor.music-preferences.v1'
-const STAGED_MUSIC_STORAGE_PREFIX = 'prometheus.editor.staged-music.v1'
-const MUSIC_PREVIEW_VOLUME_STORAGE_PREFIX = 'prometheus.editor.music-preview-volume.v1'
-const DEFAULT_MUSIC_PREVIEW_VOLUME = 0.34
-const MUSIC_INTENT_KEYWORDS = [
-  'add music',
-  'music',
-  'song',
-  'songs',
-  'track',
-  'tracks',
-  'soundtrack',
-  'score',
-  'cue',
-  'beat',
-  'beats',
-  'instrumental',
-  'playlist',
-  'audio',
-  'sound bed',
-] as const
-
-const EDIT_INTENT_KEYWORDS = [
-  'edit',
-  'edit this video',
-  'make this video',
-  'make this cut',
-  'rough cut',
-  'rough cuts',
-  'refine',
-  'tighten',
-  'trim',
-  'shorten',
-  'extend',
-  'reframe',
-  'caption',
-  'captions',
-  'subtitle',
-  'subtitle',
-  'title card',
-  'motion',
-  'overlay',
-  'overlay text',
-  'timeline',
-  'pacing',
-  'hook',
-  'intro',
-  'outro',
-  'remove dead air',
-  'cinematic',
-  'polish',
-  'clean up',
-] as const
-
-function musicPreferenceStorageKey(projectId: string) {
-  return `${MUSIC_PREFERENCE_STORAGE_PREFIX}.${projectId}`
-}
-
-function stagedMusicStorageKey(projectId: string) {
-  return `${STAGED_MUSIC_STORAGE_PREFIX}.${projectId}`
-}
-
-function musicPreviewVolumeStorageKey(projectId: string) {
-  return `${MUSIC_PREVIEW_VOLUME_STORAGE_PREFIX}.${projectId}`
-}
-
-function clampMusicPreviewVolume(value: number) {
-  if (!Number.isFinite(value)) return DEFAULT_MUSIC_PREVIEW_VOLUME
-  return Math.max(0, Math.min(1, value))
-}
-
-function isMusicIntent(value: string) {
-  const normalized = value.trim().toLowerCase()
-  return MUSIC_INTENT_KEYWORDS.some((keyword) => normalized.includes(keyword))
-}
-
-function isGenericMusicRequest(value: string) {
-  const normalized = value.trim().toLowerCase()
-  const exactMatches = [
-    'add music',
-    'music',
-    'song',
-    'songs',
-    'track',
-    'tracks',
-    'soundtrack',
-    'score',
-    'cue',
-    'beat',
-    'beats',
-    'instrumental',
-    'playlist',
-    'audio',
-    'sound bed',
-    'recommend music',
-    'music recommendations',
-    'song recommendations',
-  ]
-
-  return exactMatches.includes(normalized) || /^((add|recommend|suggest)\s+)?music(\s+.*)?$/.test(normalized) || /^[a-z\s]{1,20}$/.test(normalized)
-}
-
-function isEditIntent(value: string) {
-  const normalized = value.trim().toLowerCase()
-  if (!normalized) return false
-  if (EDIT_INTENT_KEYWORDS.some((keyword) => normalized.includes(keyword))) return true
-  return /^(?:please\s+)?(?:can you\s+)?(?:make|edit|tighten|trim|reframe|caption|subtitle|refine|polish|cut)\b/.test(normalized)
-}
-
-function removeChatEntry(entries: ChatEntry[], entryId: string) {
-  return entries.filter((entry) => entry.id !== entryId)
-}
 
 const HEADER_NAV_ITEMS: WorkspaceNavItem[] = [
   { name: 'Prompt', icon: MessageSquare },
@@ -402,162 +258,6 @@ function msToTime(ms: number) {
   return `${minutes}:${`${seconds % 60}`.padStart(2, '0')}`
 }
 
-function buildAssistantReply({
-  projectTitle,
-  originalPrompt,
-  sourceCount,
-  input,
-}: {
-  projectTitle: string
-  originalPrompt: string
-  sourceCount: number
-  input: string
-}) {
-  const normalized = input.trim().toLowerCase()
-  const original = originalPrompt.trim() || 'shape the clip into a clearer final edit'
-  const sourceNote = sourceCount > 0 ? ` I'm also holding ${sourceCount} staged source reference${sourceCount > 1 ? 's' : ''}.` : ''
-
-  if (normalized.includes('rough cuts')) {
-    return `Starting with rough cuts makes sense. I'd open with the strongest hook from "${original}", trim hesitation, and build a first pass around the cleanest beat changes.${sourceNote}`
-  }
-
-  if (normalized.includes('music')) {
-    return `For music, I'd keep it supportive rather than dominant. Based on "${original}", I'd aim for a restrained bed that lifts momentum without crowding the voice.${sourceNote}`
-  }
-
-  if (normalized.includes('title')) {
-    return `Title cards can work here if they stay spare. I'd use one typographic system, let the project name carry authority, and avoid over-decorating the message from "${original}".`
-  }
-
-  if (normalized.includes('caption')) {
-    return `Captions should feel editorial, not noisy. I'd highlight only the strongest phrases from "${original}" and keep the pacing readable rather than hyperactive.`
-  }
-
-  if (normalized.includes('motion')) {
-    return `Motion graphics should stay in service of the edit. For ${projectTitle}, I'd keep transitions minimal and reserve motion accents for moments that reinforce the original idea: "${original}".`
-  }
-
-  if (
-    normalized.includes('viral')
-    || normalized.includes('short-form')
-    || normalized.includes('9:16')
-    || normalized.includes('hook in the first 2 seconds')
-  ) {
-    return `For a viral clipping pass, I'd collapse the long-form source into a hook-first 9:16 sequence, trim every hesitation beat, and build around the most quotable moments from "${original}".${sourceNote} I'd also treat captions and reframes as retention tools, not decoration.`
-  }
-
-  return `Working from your original direction "${original}", I'd treat "${input.trim()}" as the next refinement pass and keep the system focused, paced, and uncluttered.${sourceNote}`
-}
-
-function buildMusicReply({
-  projectTitle,
-  sourceCount,
-  videoContext,
-}: {
-  projectTitle: string
-  sourceCount: number
-  videoContext: MusicVideoContext
-}) {
-  const summary = videoContext.summary ? ` I'm reading the cut as ${videoContext.summary}.` : ''
-  const paceLine =
-    videoContext.pace === 'fast'
-      ? 'keep the cue fast, upbeat, and forward-driving'
-      : videoContext.pace === 'slow'
-        ? 'keep the cue spacious and reflective'
-        : 'keep the cue balanced and editorial'
-  const sourceLine = sourceCount > 0 ? ` I'm also holding ${sourceCount} staged source${sourceCount > 1 ? 's' : ''} in view.` : ''
-
-  return `For ${projectTitle}, I'd ${paceLine}.${summary}${sourceLine} I've lined up a few options below, and if you want me to narrow it, use the intensity selector so I can lock onto atmospheric, balanced, or driving.`
-}
-
-function selectEditStyleTemplate(prompt: string, videoContext: MusicVideoContext) {
-  const contextText = normalizeInlineText([prompt, videoContext.summary, ...videoContext.signals].filter(Boolean).join(' '))
-  const ranked = STYLE_TEMPLATES.map((template) => ({
-    template,
-    score: scoreEditStyleTemplate(template, contextText, videoContext),
-  })).sort((left, right) => right.score - left.score)
-
-  return ranked[0]?.template ?? STYLE_TEMPLATES[2] ?? STYLE_TEMPLATES[0]
-}
-
-function scoreEditStyleTemplate(template: StyleTemplate, contextText: string, videoContext: MusicVideoContext) {
-  const tokens = `${template.name} ${template.description} ${template.tags.join(' ')}`.toLowerCase()
-  let score = 0
-
-  if (template.id === 'style_podcast_dynamic') {
-    if (hasAny(contextText, ['caption', 'subtitle', 'typographic', 'voice', 'talking', 'podcast', 'long form', 'longform'])) score += 8
-    if (hasAny(tokens, ['typography', 'caption'])) score += 3
-  }
-
-  if (template.id === 'style_reels_heat') {
-    if (hasAny(contextText, ['fast', 'viral', 'hook', 'retention', 'short', 'reel', 'punchy', 'snappy'])) score += 8
-  }
-
-  if (template.id === 'style_docs_story') {
-    if (hasAny(contextText, ['cinematic', 'documentary', 'story', 'reflective', 'calm', 'breathing', 'smooth'])) score += 8
-  }
-
-  if (template.id === 'style_iman_clean') {
-    if (hasAny(contextText, ['clean', 'premium', 'minimal', 'polish', 'simple', 'precise'])) score += 7
-  }
-
-  if (template.id === 'style_iman_punchy') {
-    if (hasAny(contextText, ['bold', 'impact', 'aggressive', 'strong', 'sharp'])) score += 7
-  }
-
-  if (template.id === 'style_cinematic_noir') {
-    if (hasAny(contextText, ['moody', 'dark', 'shadow', 'slow', 'dramatic'])) score += 7
-  }
-
-  if (template.id === 'style_minimal_subtle') {
-    if (hasAny(contextText, ['subtle', 'bare', 'minimal', 'quiet'])) score += 7
-  }
-
-  if (videoContext.pace === 'fast' && hasAny(tokens, ['snappy', 'aggressive', 'punchy', 'heavy'])) score += 2
-  if (videoContext.pace === 'slow' && hasAny(tokens, ['smooth', 'cinematic', 'minimal'])) score += 2
-
-  score += Math.min(template.previewImages.length, 2)
-  return score
-}
-
-function buildEditQuickActionPrompt(projectTitle: string, videoContext: MusicVideoContext, styleTemplate: StyleTemplate) {
-  const summary = videoContext.summary || 'the current cut'
-  const pace =
-    videoContext.pace === 'fast'
-      ? 'fast and punchy'
-      : videoContext.pace === 'slow'
-        ? 'slower and more reflective'
-        : 'balanced and editorial'
-
-  return [
-    `Edit this video for ${projectTitle}.`,
-    `Keep the cut ${pace}.`,
-    `Treat ${summary} as the main read.`,
-    `Use ${styleTemplate.name} as the overlay lane.`,
-    'Render the first pass directly on top of the imported media.',
-  ].join(' ')
-}
-
-function buildEditAssistantReply({
-  projectTitle,
-  sourceCount,
-  styleTemplate,
-  prompt,
-  videoContext,
-}: {
-  projectTitle: string
-  sourceCount: number
-  styleTemplate: StyleTemplate
-  prompt: string
-  videoContext: MusicVideoContext
-}) {
-  const sourceLine = sourceCount > 0 ? ` I still have ${sourceCount} staged source${sourceCount > 1 ? 's' : ''} in the chamber.` : ''
-  const summary = videoContext.summary ? ` The cut reads as ${videoContext.summary}.` : ''
-  const promptLine = prompt.trim().length > 0 ? ` You asked for "${prompt.trim()}".` : ''
-
-  return `The edit pass is live for ${projectTitle}.${summary} I'm using ${styleTemplate.name} so the overlay stays faithful to the style lane.${sourceLine}${promptLine} The backend stream can keep adding text while the preview renders the same treatment on the imported video.`
-}
-
 function buildFallbackEditAnimationPlan({
   projectId,
   projectTitle,
@@ -674,25 +374,6 @@ function buildFallbackEditAnimationPlan({
     counterCues: [],
     sfxCues: [],
   }
-}
-
-function buildMusicQuickActionPrompt(projectTitle: string, videoContext: MusicVideoContext) {
-  const summary = videoContext.summary || 'the current cut'
-  const pace =
-    videoContext.pace === 'fast'
-      ? 'fast-paced, upbeat, and driving'
-      : videoContext.pace === 'slow'
-        ? 'slower, spacious, and reflective'
-        : 'balanced, editorial, and cinematic'
-  const signals = videoContext.signals.length > 0 ? ` Signals: ${videoContext.signals.slice(0, 5).join(', ')}.` : ''
-
-  return [
-    `Recommend up to 3 music options for ${projectTitle}.`,
-    `The current cut feels ${pace}.`,
-    `Context: ${summary}.${signals}`,
-    'Show tracks that fit the edit itself, not generic music suggestions.',
-    'If the choice is broad, invite refinement with intensity options.',
-  ].join(' ')
 }
 
 function buildViralClipQuickActionPrompt({
@@ -4413,8 +4094,8 @@ export default function EditorPage() {
             <motion.aside
               layout
               className={cn(
-                'flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#131317] transition-[width,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-                isLeftPanelCollapsed && 'lg:rounded-[26px]',
+                'flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/5 bg-white/[0.01] backdrop-blur-[20px] transition-[width,transform,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[0_32px_64px_-32px_rgba(0,0,0,0.5)]',
+                isLeftPanelCollapsed && 'lg:rounded-[22px]',
               )}
               style={syncedColumnHeight ? { height: syncedColumnHeight } : undefined}
             >
@@ -4479,7 +4160,7 @@ export default function EditorPage() {
 
             <section
               ref={centerShellRef}
-              className="relative self-start flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#111115]"
+              className="relative self-start flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/5 bg-white/[0.01] backdrop-blur-[24px] shadow-[0_32px_64px_-32px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.04)]"
             >
               <motion.div
                 variants={buildRevealVariants({ delay: 0.08, distance: 12, blur: 8, duration: 0.26 })}
@@ -4525,8 +4206,8 @@ export default function EditorPage() {
               </motion.div>
 
               <div className="flex min-h-0 flex-col px-4 py-3">
-                <div className="w-full max-w-[860px] self-center rounded-[18px] border border-white/8 bg-[#09090c] p-3">
-                  <div className="flex h-[clamp(250px,40vh,460px)] items-center justify-center rounded-[14px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0)_100%)] p-4">
+                <div className="w-full max-w-[860px] self-center rounded-[20px] border border-white/10 bg-black/40 p-3 shadow-2xl">
+                  <div className="flex h-[clamp(250px,40vh,460px)] items-center justify-center rounded-[16px] border border-white/5 bg-white/[0.01] p-4">
                     <div className="relative flex h-full w-full items-center justify-center">
                       <div
                         ref={setMusicSpotlightPortalTarget}
@@ -4785,18 +4466,18 @@ export default function EditorPage() {
                   />
                 ) : null}
 
-                <div className="mt-2.5 flex w-full max-w-[860px] flex-wrap items-center gap-3 self-center rounded-[20px] border border-white/8 bg-[#0c0c10] px-4 py-2.5">
+                <div className="mt-3 flex w-full max-w-[860px] flex-wrap items-center gap-4 self-center rounded-[22px] border border-white/5 bg-white/[0.02] px-4 py-2.5 shadow-lg backdrop-blur-md">
                   <button
                     type="button"
                     onClick={togglePreviewPlayback}
                     disabled={previewKind !== 'video' || !previewUrl}
-                    className="grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-white/76 transition-colors hover:text-white disabled:cursor-not-allowed disabled:text-white/28"
+                    className="grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.05] text-white/80 transition-all hover:bg-white/10 hover:text-white active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     {previewPlaying ? <Pause className="size-4" /> : <Play className="size-4 fill-current" />}
                   </button>
 
-                  <div className="min-w-[84px] text-sm text-white/72">
-                    {transportCurrentTime} / {transportTime}
+                  <div className="min-w-[84px] text-[13px] font-medium text-white/60 tabular-nums">
+                    {transportCurrentTime} <span className="text-white/25 mx-0.5">/</span> {transportTime}
                   </div>
 
                   <input
@@ -4806,28 +4487,28 @@ export default function EditorPage() {
                     value={transportProgress}
                     onChange={(event) => handlePreviewSeek(Number(event.target.value))}
                     disabled={previewKind !== 'video' || !previewUrl}
-                    className="h-1.5 flex-1 accent-white disabled:cursor-not-allowed disabled:opacity-40"
+                    className="h-1 flex-1 cursor-pointer accent-white disabled:cursor-not-allowed disabled:opacity-20"
                   />
 
                   <button
                     type="button"
-                    className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-white/54 transition-colors hover:text-white/82"
+                    className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.05] text-white/50 transition-all hover:bg-white/10 hover:text-white/80"
                   >
                     <Volume2 className="size-4" />
                   </button>
                 </div>
 
-                <div className="mt-2 flex w-full max-w-[860px] flex-wrap items-center justify-center gap-2 self-center">
+                <div className="mt-3 flex w-full max-w-[860px] flex-wrap items-center justify-center gap-2 self-center">
                   {BOTTOM_MODES.map((mode) => (
                     <button
                       key={mode}
                       type="button"
                       onClick={() => setBottomMode(mode)}
                       className={cn(
-                        'rounded-full border px-4 py-2 text-xs transition-colors',
+                        'rounded-full border px-4 py-2 text-[11px] font-medium uppercase tracking-[0.1em] transition-all duration-200 active:scale-[0.96]',
                         bottomMode === mode
-                          ? 'border-white/14 bg-white/[0.10] text-white'
-                          : 'border-white/8 bg-white/[0.03] text-white/56 hover:text-white/78',
+                          ? 'border-white/15 bg-white/10 text-white shadow-[0_0_12px_rgba(255,255,255,0.06)]'
+                          : 'border-white/5 bg-white/[0.02] text-white/40 hover:border-white/15 hover:bg-white/[0.05] hover:text-white/70',
                       )}
                       >
                       {mode}
@@ -4840,7 +4521,7 @@ export default function EditorPage() {
 
             <motion.aside
               layout
-              className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[#131317] lg:col-span-2 xl:col-span-1"
+              className="flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/5 bg-white/[0.01] backdrop-blur-[20px] lg:col-span-2 xl:col-span-1 shadow-[0_32px_64px_-32px_rgba(0,0,0,0.5)]"
               style={syncedColumnHeight ? { height: syncedColumnHeight } : undefined}
             >
               <motion.div

@@ -32,11 +32,11 @@ export function WorkspaceFrame({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden font-sans">
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_14%_2%,rgba(212,176,255,0.14)_0%,rgba(34,14,58,0.08)_38%,rgba(0,0,0,0)_68%),linear-gradient(180deg,rgba(14,9,24,0.96)_0%,rgba(6,4,10,1)_100%)]" />
-      <IsoLevelWarp color="168, 124, 255" density={32} speed={1.15} />
+    <div className="relative h-screen w-full overflow-hidden font-sans selection:bg-white/10 selection:text-white">
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_12%_4%,rgba(168,124,255,0.08)_0%,rgba(34,14,58,0.04)_42%,transparent_72%),linear-gradient(180deg,rgba(10,10,14,0.98)_0%,rgba(6,6,8,1)_100%)]" />
+      <IsoLevelWarp color="148, 100, 255" density={36} speed={0.9} />
 
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_14%_2%,rgba(212,176,255,0.22)_0%,rgba(34,14,58,0.12)_38%,rgba(0,0,0,0)_68%),linear-gradient(180deg,rgba(12,7,20,0.62)_0%,rgba(6,4,10,0.84)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_12%_4%,rgba(168,124,255,0.14)_0%,rgba(34,14,58,0.06)_42%,transparent_72%),linear-gradient(180deg,rgba(8,8,12,0.6)_0%,rgba(4,4,6,0.85)_100%)]" />
 
       <div className="relative z-10 flex h-screen w-full">
         {shouldRenderSidebar ? <DashboardSidebar /> : null}

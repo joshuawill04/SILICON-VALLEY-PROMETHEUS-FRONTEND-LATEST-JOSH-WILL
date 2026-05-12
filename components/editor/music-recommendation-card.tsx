@@ -55,7 +55,7 @@ export function MusicRecommendationCard({
       viewport={reduceMotion ? undefined : { root: viewportRoot, once: false, amount: 0.35 }}
       variants={reduceMotion ? undefined : revealVariants}
       className={cn(
-        'group relative w-full overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(12,12,16,0.98)_0%,rgba(8,8,12,0.96)_100%)] p-3 shadow-[0_18px_48px_-32px_rgba(0,0,0,0.88)]',
+        'group relative w-full overflow-hidden rounded-[24px] border border-white/5 bg-white/[0.03] p-3 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.04)] backdrop-blur-[20px] transition-all duration-300 hover:border-white/12 hover:bg-white/[0.05]',
         tone.border,
         isPreviewing && tone.previewBorder,
       )}
@@ -72,8 +72,8 @@ export function MusicRecommendationCard({
           whileHover={reduceMotion ? undefined : { y: -1, scale: 1.01 }}
           whileTap={reduceMotion ? undefined : { scale: 0.985 }}
           className={cn(
-            'flex h-14 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-black px-3 text-left transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
-            isPreviewing ? tone.previewShadow : 'shadow-[0_10px_24px_-18px_rgba(0,0,0,0.9)]',
+            'flex h-14 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-white/[0.04] border border-white/5 px-3 text-left transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-white/[0.08] hover:border-white/10',
+            isPreviewing ? tone.previewShadow : 'shadow-sm',
           )}
         >
           <motion.div
