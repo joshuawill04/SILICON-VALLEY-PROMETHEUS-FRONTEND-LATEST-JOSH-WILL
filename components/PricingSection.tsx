@@ -17,9 +17,9 @@ export function PricingSection() {
           if (isLoading) return
           
           if (session) {
-            router.push(`/checkout?plan=${plan.id}`)
+            router.push(`/settings/billing?plan=${plan.id}`)
           } else {
-            router.push(`/signup?redirect=/checkout&plan=${plan.id}`)
+            router.push(`/signup?redirect=/settings/billing&plan=${plan.id}`)
           }
         }
 

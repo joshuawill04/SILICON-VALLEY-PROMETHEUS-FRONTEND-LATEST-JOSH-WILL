@@ -749,11 +749,14 @@ export default function ProfileSettingsPage() {
         <div className="mx-auto max-w-3xl">
           <header className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-white/62">
-                <Link href="/settings">
-                  <ArrowLeft className="size-4" />
-                  Back
-                </Link>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="-ml-2 mb-4 text-white/62"
+                onClick={() => router.push('/settings')}
+              >
+                <ArrowLeft className="size-4" />
+                Back
               </Button>
               <h1 className="text-3xl font-bold tracking-tight text-white">Profile Settings</h1>
               <p className="mt-2 text-sm text-white/50">Manage your account, security, and workspace preferences</p>

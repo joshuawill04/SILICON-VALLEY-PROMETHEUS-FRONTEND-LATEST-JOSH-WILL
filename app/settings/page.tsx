@@ -2,10 +2,10 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { Bell, ChevronRight, Link2, Shield, User } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Bell, ChevronLeft, ChevronRight, Link2, Shield, User } from 'lucide-react'
 
 import { PrometheusShell } from '@/components/prometheus-shell'
-import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 
 export default function SettingsPage() {
+  const router = useRouter()
   const [reducedMotion, setReducedMotion] = React.useState(false)
   const [notifications, setNotifications] = React.useState(true)
   const [safeMode, setSafeMode] = React.useState(true)
@@ -25,7 +26,26 @@ export default function SettingsPage() {
 
   return (
     <PrometheusShell
-      header={<PageHeader title="Settings" description="Preferences and integrations (UI scaffolding)." showBackButton />}
+      header={
+        <header className="flex items-center justify-between gap-6 border-b border-white/8 bg-[linear-gradient(180deg,rgba(10,12,18,0.88)_0%,rgba(8,10,14,0.72)_100%)] px-4 py-4 shadow-[0_18px_42px_-34px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:px-8 sm:py-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push('/studio')}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#94a3b8] transition-all duration-200 hover:bg-white/[0.05] hover:text-[#f8fafc] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/70"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
+            </button>
+            <div className="min-w-0">
+              <h1 className="truncate text-2xl font-semibold tracking-[-0.03em] text-white/96 md:text-3xl">
+                Settings
+              </h1>
+              <p className="mt-1 text-sm leading-6 text-white/58">Preferences and integrations (UI scaffolding).</p>
+            </div>
+          </div>
+        </header>
+      }
     >
       <div className="px-8 py-6 grid gap-4 lg:grid-cols-2">
         <Card className="lg:col-span-2">
