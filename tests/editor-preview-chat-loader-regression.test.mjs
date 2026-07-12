@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const root = process.cwd()
@@ -17,17 +17,15 @@ function run() {
   assert.match(editorPage, /document\.body/)
   assert.match(editorPage, /createPortal\([\s\S]*resolvedComposerPortalTarget/)
 
-  const loader = read('components/ui/minimal-typographic-loader.tsx')
-  assert.match(loader, /PrometheusInfinityMark/)
-  assert.equal(loader.includes('next/image'), false)
-  assert.equal(loader.includes('/loaders/prometheus-infinity-loader.gif'), false)
-  assert.equal(loader.includes('mix-blend-screen'), false)
-  assert.equal(loader.includes('standalone'), false)
-  assert.equal(loader.includes('function StandaloneInfinityMark'), false)
+  const loader = read('components/loading-animation/LoadingAnimation.tsx')
+  assert.match(loader, /<canvas/)
+  assert.match(loader, /requestAnimationFrame/)
+  assert.equal(loader.includes('<svg'), false)
+  assert.equal(loader.includes('WebGL'), false)
 
   const sourceStagePlaceholder = read('components/editor/source-stage-placeholder.tsx')
-  assert.match(sourceStagePlaceholder, /!isLoading \? \(/)
-  assert.equal(sourceStagePlaceholder.includes("isLoading && 'opacity-28'"), false)
+  assert.match(sourceStagePlaceholder, /InlineLoadingAnimation/)
+  assert.match(sourceStagePlaceholder, /isLoading \? \(/)
   assert.equal(sourceStagePlaceholder.includes('MinimalTypographicLoader'), false)
   assert.equal(sourceStagePlaceholder.includes('prometheus-infinity-loader'), false)
 
@@ -37,6 +35,9 @@ function run() {
   assert.equal(previewCanvas.includes('bg-black/15 px-6'), false)
   assert.equal(previewCanvas.includes('Loading source preview'), false)
   assert.equal(previewCanvas.includes('isPreviewLoadingVisible ?'), false)
+
+  assert.equal(existsSync(join(root, 'components/ui/minimal-typographic-loader.tsx')), false)
+  assert.equal(existsSync(join(root, 'public/loaders/prometheus-infinity-loader.gif')), false)
 
   const uploadInterface = read('components/video-upload-interface.tsx')
   assert.match(uploadInterface, /footerAction\?: React\.ReactNode/)

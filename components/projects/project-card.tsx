@@ -4,6 +4,7 @@ import * as React from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { Copy, Link2, Pencil, Trash2 } from 'lucide-react'
 
+import { InlineLoadingAnimation } from '@/components/loading-animation'
 import { GlassCard } from '@/components/ui/glass-card'
 import type { ProjectListItem } from '@/lib/projects/types'
 import { cn } from '@/lib/utils'
@@ -93,7 +94,9 @@ export function ProjectCard({ project, onEdit, onDuplicate, onDelete, onShare }:
               badgeClass(project.status),
             )}
           >
-            {project.status === 'rendering' ? <span className="h-2 w-2 animate-pulse rounded-full bg-amber-300" /> : null}
+            {project.status === 'rendering' ? (
+              <InlineLoadingAnimation size={14} label={`Rendering ${project.title}`} />
+            ) : null}
             <span className="capitalize">{project.status}</span>
           </div>
         </div>
@@ -109,12 +112,6 @@ export function ProjectCard({ project, onEdit, onDuplicate, onDelete, onShare }:
             <div className="mb-1 flex items-center justify-between text-xs text-white/46">
               <span>Rendering</span>
               <span>{project.progress ?? 0}%</span>
-            </div>
-            <div className="h-1 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-[var(--theme-accent)] transition-[width] duration-300 ease-out"
-                style={{ width: `${project.progress ?? 0}%` }}
-              />
             </div>
           </div>
         ) : null}

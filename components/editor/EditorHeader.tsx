@@ -2,9 +2,10 @@
 
 import * as React from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle2, Sparkles, Undo2, Redo2 } from 'lucide-react'
+import { CheckCircle2, Undo2, Redo2 } from 'lucide-react'
 import { WorkspaceNavBar, type WorkspaceNavItem } from '@/components/ui/anime-navbar'
 import { CinematicExportCluster } from '@/components/editor/cinematic-export-cluster'
+import { InlineLoadingAnimation } from '@/components/loading-animation'
 import { cn } from '@/lib/utils'
 import type { Project, ProcessingJob, ProjectExport, HeaderNavMode } from '@/lib/types'
 import { toast } from 'sonner'
@@ -98,11 +99,11 @@ export function EditorHeader({
               <div
                 className={cn(
                   'flex items-center gap-1.5 text-[10px] uppercase tracking-widest',
-                  saveStatus === 'saving' ? 'text-accent-blue animate-pulse' : 'text-white/20'
+                  saveStatus === 'saving' ? 'text-accent-blue' : 'text-white/20'
                 )}
               >
                 {saveStatus === 'saving' ? (
-                  <Sparkles className="size-3" />
+                  <InlineLoadingAnimation size={12} label="Saving project" />
                 ) : (
                   <CheckCircle2 className="size-3" />
                 )}
@@ -151,7 +152,9 @@ export function EditorHeader({
               isDownloading={isDownloading}
             />
           ) : (
-            <div className="h-9 w-[180px] rounded-full border border-white/8 bg-white/[0.03]" />
+            <div className="flex h-9 w-[180px] items-center justify-center">
+              <InlineLoadingAnimation size={20} label="Loading export controls" />
+            </div>
           )}
         </div>
       </div>
@@ -161,4 +164,3 @@ export function EditorHeader({
     </header>
   )
 }
-
