@@ -4,10 +4,8 @@ import * as React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowUp, ImageIcon, PanelLeft, Video } from 'lucide-react'
 
+import { InlineLoadingAnimation } from '@/components/loading-animation'
 import { cn } from '@/lib/utils'
-
-const PROMETHEUS_LOGO_SRC = '/branding/prometheus-logo-no-bg.png'
-const PROMETHEUS_ORIGINAL_LOGO_ASSET = 'prometheus original logo.png'
 
 export type PrometheusChatMessage = {
   id: string
@@ -175,7 +173,7 @@ export function PrometheusChat({
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
             <div className="flex flex-col items-center gap-3">
-              <LiquidMetalFallback size={48} />
+              <InlineLoadingAnimation size={96} label="Prometheus is thinking" />
               <span className="text-[11px] font-normal uppercase tracking-[0.15em] text-[#555]">Thinking...</span>
             </div>
           </motion.div>
@@ -266,7 +264,11 @@ function PrometheusMessageBubble({ message, index }: { message: PrometheusChatMe
             : 'rounded-[4px_16px_16px_16px] border-l border-[rgba(255,255,255,0.04)] bg-[rgba(255,255,255,0.02)] text-[#EAEAEA]',
         )}
       >
-        {isThinking ? <ThinTypingLine /> : <p className="whitespace-pre-wrap">{message.content}</p>}
+        {isThinking ? (
+          <InlineLoadingAnimation size={32} label="Prometheus is thinking" />
+        ) : (
+          <p className="whitespace-pre-wrap">{message.content}</p>
+        )}
       </div>
       {message.pills?.length ? (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -297,35 +299,12 @@ function SpectraNoiseFallback() {
   )
 }
 
-function LiquidMetalFallback({ size = 48 }: { size?: number }) {
-  return (
-    <div
-      className="prometheus-liquid-metal relative overflow-hidden rounded-[12px]"
-      style={{ height: size, width: size }}
-      aria-label={`Liquid metal Prometheus logo fallback for ${PROMETHEUS_ORIGINAL_LOGO_ASSET}`}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={PROMETHEUS_LOGO_SRC}
-        alt=""
-        className="h-full w-full object-contain opacity-95 [filter:grayscale(1)_contrast(1.35)_brightness(1.55)]"
-        draggable={false}
-      />
-      <span className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0)_18%,rgba(255,255,255,0.72)_44%,rgba(180,180,180,0.18)_58%,rgba(255,255,255,0)_78%)] mix-blend-screen" />
-    </div>
-  )
-}
-
 function EmptyChatWatermark() {
   return (
     <div className="pointer-events-none absolute inset-0 grid select-none place-items-center text-[40vh] font-normal leading-none text-white/[0.03]">
       P
     </div>
   )
-}
-
-function ThinTypingLine() {
-  return <span className="prometheus-thinking-line block h-px w-24 bg-[rgba(180,180,180,0.4)]" aria-label="Thinking" />
 }
 
 function PrometheusChatStyles() {
@@ -359,18 +338,6 @@ function PrometheusChatStyles() {
         animation: prometheusNoiseDrift 5s steps(8) infinite;
       }
 
-      .prometheus-liquid-metal img {
-        animation: prometheusLiquidRipple 4.8s ease-in-out infinite;
-      }
-
-      .prometheus-liquid-metal span {
-        animation: prometheusMetalSweep 3.6s ease-in-out infinite;
-      }
-
-      .prometheus-thinking-line {
-        animation: prometheusThinkingPulse 1.5s ease-in-out infinite;
-      }
-
       @keyframes prometheusNoiseDrift {
         0% { transform: translate3d(0, 0, 0); opacity: 0.52; }
         25% { transform: translate3d(-1%, 1%, 0); opacity: 0.64; }
@@ -379,21 +346,6 @@ function PrometheusChatStyles() {
         100% { transform: translate3d(0, 0, 0); opacity: 0.52; }
       }
 
-      @keyframes prometheusLiquidRipple {
-        0%, 100% { transform: scale(0.98) skewX(0deg); filter: grayscale(1) contrast(1.35) brightness(1.55) blur(0px); }
-        40% { transform: scale(1.04) skewX(-4deg); filter: grayscale(1) contrast(1.55) brightness(1.9) blur(0.2px); }
-        70% { transform: scale(1.01) skewX(3deg); filter: grayscale(1) contrast(1.2) brightness(1.45) blur(0px); }
-      }
-
-      @keyframes prometheusMetalSweep {
-        0%, 100% { transform: translateX(-120%); opacity: 0.2; }
-        50% { transform: translateX(120%); opacity: 0.86; }
-      }
-
-      @keyframes prometheusThinkingPulse {
-        0%, 100% { opacity: 0.3; transform: scaleX(0.82); transform-origin: left center; }
-        50% { opacity: 0.8; transform: scaleX(1); transform-origin: left center; }
-      }
     `}</style>
   )
 }
